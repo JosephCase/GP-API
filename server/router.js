@@ -1,8 +1,9 @@
 var express = require('express');
-var homePage = require("./homePage");
+var navigation = require(".controllers/navigation");
+var section = require(".controllers/section");
 var page = require("./page");
 var cookieParser = require('cookie-parser');
-var config = require('./config');
+var config = require('./config/config.js');
 var formidable = require("formidable");
 
 var app = express();
@@ -53,16 +54,17 @@ var sessionChecker = function (req, res, next) {
 app.use(sessionChecker);
 
 
-
-// Homepage
-app.get("/", function(req, res) {
-	homePage.getPage(res);
+app.get("/section", function(req, res) {
+	navigation.getSections(req, res);
 });
-app.put("/", function(req, res) {
-	homePage.reOrderPages(req, res);
+// app.get("/section/:id", function(req, res) {
+// 	section.getSection(req, res);
+// });	TODO#
+app.put("/section/:id", function(req, res) {
+	section.reOrderPages(req, res);
 });
 
-// Page
+
 app.get("/page", function(req, res) {
 	page.getPage(req, res);
 });
