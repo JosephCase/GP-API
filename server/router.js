@@ -1,10 +1,12 @@
 var express = require('express');
-var navigation = require(".controllers/navigation");
-var section = require(".controllers/section");
-var page = require("./page");
 var cookieParser = require('cookie-parser');
-var config = require('./config/config.js');
 var formidable = require("formidable");
+
+var config = require('./config/config.js');
+
+var navigationController = require("./controllers/navigation");
+var sectionController = require("./controllers/section");
+var pageController = require("./controllers/page");
 
 var app = express();
 
@@ -54,24 +56,25 @@ var sessionChecker = function (req, res, next) {
 app.use(sessionChecker);
 
 
-app.get("/section", function(req, res) {
-	navigation.getSections(req, res);
+app.get("/navigation", function(req, res) {
+	navigationController.getNavLinks(req, res);
 });
-// app.get("/section/:id", function(req, res) {
-// 	section.getSection(req, res);
-// });	TODO#
-app.put("/section/:id", function(req, res) {
-	section.reOrderPages(req, res);
+
+app.get("/section/:id", function(req, res) {
+	sectionController.getSection(req, res);
+});
+app.post("/sections/:id/pages", function(req, res) {
+	sectionController.addPage(req, res);
+});
+app.put("/sections/:id/pages", function(req, res) {
+	sectionController.reOrderPages(req, res);
 });
 
 
-app.get("/page", function(req, res) {
+app.get("/pages/:id", function(req, res) {
 	page.getPage(req, res);
 });
-app.post("/page", function(req, res) {
-	page.createPage(req, res);
-});
-app.patch("/page", function(req, res) {
+app.put("/pages/:id", function(req, res) {
 	page.updatePage(req, res);
 });
 

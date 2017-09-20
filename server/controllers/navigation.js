@@ -3,9 +3,9 @@
 const db = require("../database/navigation.js");
 
 // get the page content and send it to the client
-function getSections(req, res) {
+function getNavLinks(req, res) {
 
-	db.getSections()
+	db.getNavLinks()
 	.then( sections => {
 		res.end(JSON.stringify(sections));
 	})
@@ -16,4 +16,4 @@ function getSections(req, res) {
 
 }
 
-exports.getSections = getSections;
+exports.getNavLinks = getNavLinks;

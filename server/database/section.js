@@ -2,6 +2,66 @@
 
 var connection = require('./sqlConnection.js').connection;
 
+function getSection(id) {
+
+	return new Promise((resolve, reject) => {		
+		connection.query(
+			`select
+				page.id,
+				page.name
+				FROM page
+					where id=${id}`, 
+			function (err, results) {
+				if(err) {
+					console.log(`SQL Error re-ordering sections: ${err}`);
+					reject(err);	//response report error	T#D
+				}
+				resolve(results[0]);
+			}
+		);
+	});
+}
+
+function getSectionPages(id) {
+
+	return new Promise((resolve, reject) => {		
+		connection.query(
+			`select
+				page.id,
+				page.name,
+				page.visible,
+				page.position
+				FROM page
+					where parentPage_id=${id}`, 
+			function (err, results) {
+				if(err) {
+					console.log(`SQL Error re-ordering sections: ${err}`);
+					reject(err);	//response report error	T#D
+				}
+				resolve(results);
+			}
+		);
+	});
+}
+
+//# TODO add update of mainImage url after insert
+
+function addPage(sectionId, pageName) {
+	return new Promise((resolve, reject) => {
+		connection.query(
+			`INSERT INTO page (name, parentPage_id, visible) VALUES(${pageName},${sectionId},0);
+			select id, name	FROM page WHERE id = LAST_INSERT_ID();`,
+			function(err, results) {
+				if(err) {					
+					console.log(`SQL Error adding page: ${err}`);
+					reject(err);	//response report error	T#D
+				}
+				resolve(results[0]);
+			}
+		)
+	});
+}
+
 function reOrderPages(pages) {
 
 	var query = '';
@@ -17,13 +77,15 @@ function reOrderPages(pages) {
 				if(err) {
 					console.log(`SQL Error re-ordering sections: ${err}`);
 					reject(`${err}`);	//response report error	T#D
-				} else {
-					resolve();
 				}
+				resolve();
 			}
 		);
 	})
 
 }
 
+exports.getSection = getSection;
+exports.getSectionPages = getSectionPages;
+exports.addPage = addPage;
 exports.reOrderPages = reOrderPages;
