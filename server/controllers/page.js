@@ -1,6 +1,16 @@
 'use strict';
+const config = require("../../config.config.js");
+const db = require("../database/section.js");
 
-db = require("../database/section.js");
+// content types
+const TEXT = config.contentTypes.TEXT ;
+const IMAGE = config.contentTypes.IMAGE ;
+const VIDEO = config.contentTypes.VIDEO ;
+
+// action types
+const ADD = config.actionTypes.ADD ;
+const EDIT = config.actionTypes.EDIT ;
+const DELETE = config.actionTypes.DELETE ;
 
 function getPage(req, res) {
 
@@ -34,15 +44,26 @@ function updatePage(req, res) {
 
 		if(err) {
 			console.log(`Error parsing update page form: ${err}`);
+			res.statusCode = 500;	//#TODO
+			res.end();
 		}
 
 		let content = JSON.parse(fields.content);
 
 		Promise.both([
-			_updatePageDetails(fields.pageName, files['mainImage'], fields.visible),
-			_updatePageContent(content, files)
+			_updatePageDetails(id, fields.pageName, files['mainImage'], fields.visible),
+			_updatePageContent(id, content, files)
 		])
-		.then()
+		.then( results => {	
+			for (var i = results.length - 1; i >= 0; i--) {
+				if !results[i] return false;
+				break;
+			}
+			return 
+		})
+		.then( results => {	
+			res.end() ;
+		})
 		.catch( err => {
 			res.statusCode = 500;	//#TODO
 			res.end();
@@ -56,72 +77,74 @@ function _updatePageDetails(id, name, mainImage, visible) {
 	let promises = [];
 
 	if(name || visible) promises.push(db.updatePageDetails(id, name, visible));
-	if(mainImage) promises.push(db.getMainImagePath(id).then(path => fileSystem.saveFile(path)));
+	if(mainImage) promises.push(db.getMainImagePath(id).then( path => return fileSystem.saveFile(mainImage, path)));
 
-	if(promises.length > 1) {
-		return new Promise((resolve, reject) => {
-			Promise.All(promises)
-			.then( results => {
-				
-			})
-		}
-	} else {
-		return promises[0];
+	return Promise.all(promises);
+
+}
+
+function _updatePageContent(id, content, files) {
+
+	var promises = [];
+
+	for(var propertyName in content) {
+
+		(function(content, file){
+			if(content.action === ADD) {
+				promises.push(_addContent(content, file))
+			} else if(content.action === EDIT) {
+				promises.push(_editContent(content, file))
+			} else if(content.action === DELETE) {
+				promises.push(_deleteContent(content))
+			} else {
+				console.log('Unrecognised action: ' + content.action);
+				return false;
+				// return Promise.reject(); ??
+			}
+		}(content[propertyName], files[propertyName]));
+
 	}
 
-
-	var tasks = [function(callback){
-
-		if(pageName) {
-
-			var pageUrl = pageName.toLowerCase().replace(/ /g, "-").replace(/'/g, "").replace(/"/g, "");
-			db.connection.query( 
-				"UPDATE page SET name=?, url=? WHERE id=?",
-				[pageName, pageUrl, pageId],
-				callback
-			)
-		} else {
-			callback();
-		}
-	}, function(callback) {
-		//if the image has changed, overwrite the old image
-		if(mainImage) {
-			db.connection.query( 
-				"select mainImage_url from page where id = ?",
-				[pageId],
-				function (err, results) {
-					if(err) {
-						console.log(err)
-					} else {
-						fileController.saveFile(mainImage, results[0].mainImage_url, callback);
-					}
-				}
-			);
-		} else {
-			callback();
-		}
-	}, function(callback) {
-		if(visible) {
-			visible = (visible.toLowerCase() === 'true');
-			console.log(visible);
-			db.connection.query( 
-				"UPDATE page SET visible=? WHERE id=?",
-				[visible, pageId],
-				callback
-			);
-		} else {
-			callback();
-		}
-	}];
-
-	async.parallel(tasks, parent_callback);
-
+	return Promise.All(promises);
 }
 
-function _saveMainImage(id) {
+function _editContent(content, file) {
 
+	if(file && content.type === IMAGE) {
+		return db.editContent(content.id, content, file).then(filePath => {return fileSystem.saveImage(filePath, file)})
+	} else if(file && content.type === VIDEO) {
+		return db.editContent(content.id, content, file).then(filePath => {return fileSystem.saveVideo(filePath, file)})
+	} else {
+		return db.editContent(content.id, content);
+	}
 }
 
+function _deleteContent(content) {
+
+	return db.deleteContent(content.id).then(result => {
+		if(content.type === IMAGE) {
+			let filePath = result;
+			return fileSystem.deleteImage(filePath)
+		} else if(content.type === VIDEO) {
+			let filePath = result;
+			return fileSystem.deleteVideo(filePath)
+		}
+		return result;
+	})
+}
+
+function _addContent(content, file) {
+
+	if(content.type === TEXT) {
+		return db.addContent(content)
+	} else if(file && content.type === IMAGE) {
+		return db.addContent(content).then( filePath => {return fileSystem.saveImage(filePath, file)})
+	} else if(file && content.type === VIDEO) {
+		return db.addContent(content).then( filePath => {return fileSystem.saveVideo(filePath, file)})
+	} else {
+		return false;
+	}
+}
 
 exports.getPage = getPage;
 exports.updatePage = updatePage;

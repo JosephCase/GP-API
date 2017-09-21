@@ -1,8 +1,8 @@
 'use strict';
 
-var formidable = require("formidable"),	//do I need formiddable here?#
+var config = require("../../config.config.js")
+	formidable = require("formidable"),	//do I need formiddable here?#
 	db = require("../database/section.js");
-
 
 function getSection(req, res) {
 	var sectionId = req.params.id;
