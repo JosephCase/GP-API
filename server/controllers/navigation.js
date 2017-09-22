@@ -10,7 +10,8 @@ function getNavLinks(req, res) {
 		res.end(JSON.stringify(sections));
 	})
 	.catch( err => {
-        // res.statusCode = 500;
+        console.log(err);
+        res.statusCode = 500;
 		res.end();	//response report error	T#D
 	});
 

@@ -10,8 +10,7 @@ function getPage(id) {
 			`SELECT name, mainImage_url, id, visible FROM page where id = ${id}`,
 			function (err, results) {
 				if(err) {
-					console.log(`SQL error getting page details from database: ${err}`);
-					reject(err);
+					reject(`SQL error getting page details: ${err}`);
 				}
 
 				resolve(results[0]);
@@ -22,29 +21,39 @@ function getPage(id) {
 	})
 }
 
-function getPageContent(id) {
+function updatePage(id, name, visible) {
 
 	return new Promise((resolve, reject) => {
 
-		connection.query(
-			`SELECT content.* FROM page
-				inner join content
-					on content.page_id = page.id and page.id = ${id}
-					ORDER BY position`,
-			function (err, results) {
+		connection.query( 
+			`UPDATE page SET name=COALESCE(${name},name), visible=COALESCE(${visible},visible) WHERE id=${id}`,
+			function(err, results) {
 				if(err) {
-					console.log(`SQL error getting page content from database: ${err}`);
-					reject(err);
+					reject(`SQL error updating page details: ${err}`);
 				}
-
-				resolve(results);
-
+				resolve();
 			}
-		);
+		)
+	})
 
+}
+
+function getMainImagePath(id) {
+
+	return new Promise((resolve, reject) => {
+
+		connection.query( 
+			`SELECT content FROM content WHERE id = ${id}`,
+			function(err, results) {
+				if(err) {
+					reject(`SQL error getting main image path: ${err}`);
+				}
+				resolve(results[0]);
+			}
+		)
 	})
 }
 
-
 exports.getPage = getPage;
-exports.getPageContent = getPageContent;
+exports.updatePage = updatePage;
+exports.getMainImagePath = getMainImagePath;

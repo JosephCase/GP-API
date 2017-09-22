@@ -19,8 +19,7 @@ function getNavLinks() {
 				        	order by position, id`,
 			function (err, results) {
 				if(err) {
-					console.log(`SQL Error getting sections: ${err}`);
-					reject(`${err}`);
+					reject(`SQL Error getting sections: ${err}`);
 				}
 				resolve(`${results}`);
 			}

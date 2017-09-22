@@ -15,7 +15,8 @@ function getSection(req, res) {
 		section.pages = pages;
 		res.end(JSON.stringify(section));
 	})
-	.catch( error => {
+	.catch( err => {
+		console.log(err);
 		res.end()	//#todo
 	})
 

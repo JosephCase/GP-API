@@ -1,6 +1,7 @@
 'use strict';
 const config = require("../../config.config.js");
-const db = require("../database/section.js");
+const pageData = require("../database/page.js");
+const contentData = require("../database/content.js");
 
 // content types
 const TEXT = config.contentTypes.TEXT ;
@@ -18,7 +19,7 @@ function getPage(req, res) {
 
 	if(!pageId) res.end();
 
-	Promise.all([db.getPage(pageId), db.getPageContent(pageId)])
+	Promise.all([pageData.getPage(pageId), contentData.getContentByPageId(pageId)])
 	.then( results => {
 		let page = results[0];
 		page.content = results[1];
@@ -26,6 +27,7 @@ function getPage(req, res) {
 		res.end(JSON.stringify(page));
 	})	
 	.catch( err => {
+		console.log(err);
 		res.end()	//#todo
 	})
 
@@ -35,7 +37,10 @@ function updatePage(req, res) {
 
 	let id = res.params.id;
 
-	if (!id) req.end();
+	if (!id) {
+		console.log(`No id provided`);
+		req.end();
+	}
 
 	var form = new formidable.IncomingForm();
 	form.multiples = true;
@@ -48,23 +53,17 @@ function updatePage(req, res) {
 			res.end();
 		}
 
-		let content = JSON.parse(fields.content);
+		let contents = JSON.parse(fields.content);
 
-		Promise.both([
+		Promise.all([
 			_updatePageDetails(id, fields.pageName, files['mainImage'], fields.visible),
-			_updatePageContent(id, content, files)
+			_updatePageContent(contents, files)
 		])
 		.then( results => {	
-			for (var i = results.length - 1; i >= 0; i--) {
-				if !results[i] return false;
-				break;
-			}
-			return 
-		})
-		.then( results => {	
-			res.end() ;
+			res.end();
 		})
 		.catch( err => {
+			console.log(err);
 			res.statusCode = 500;	//#TODO
 			res.end();
 		})
@@ -76,75 +75,97 @@ function _updatePageDetails(id, name, mainImage, visible) {
 
 	let promises = [];
 
-	if(name || visible) promises.push(db.updatePageDetails(id, name, visible));
-	if(mainImage) promises.push(db.getMainImagePath(id).then( path => return fileSystem.saveFile(mainImage, path)));
+	if(name || visible) promises.push(pageData.updatePage(id, name, visible));
+	if(mainImage) promises.push(pageData.getMainImagePath(id).then( path => return fileSystem.saveFile(mainImage, path)));
 
 	return Promise.all(promises);
 
 }
 
-function _updatePageContent(id, content, files) {
+function _updatePageContent(contents, files) {
 
 	var promises = [];
 
-	for(var propertyName in content) {
+	for(var propertyName in contents) {
 
-		(function(content, file){
-			if(content.action === ADD) {
-				promises.push(_addContent(content, file))
-			} else if(content.action === EDIT) {
-				promises.push(_editContent(content, file))
-			} else if(content.action === DELETE) {
-				promises.push(_deleteContent(content))
-			} else {
-				console.log('Unrecognised action: ' + content.action);
-				return false;
-				// return Promise.reject(); ??
-			}
-		}(content[propertyName], files[propertyName]));
+		let content = contents[propertyName];
+
+		if ((content.type === IMAGE || content.type === VIDEO) && files[propertyName] ) {
+			content.file = files[propertyName];
+		}		
+
+		if(content.action === ADD) {
+			promises.push(_addContent(content))
+		} else if(content.action === EDIT) {
+			promises.push(_editContent(content))
+		} else if(content.action === DELETE) {
+			promises.push(_deleteContent(content))
+		} else {
+			throw `Unrecognised action: ${content.action}`;
+		}
 
 	}
 
 	return Promise.All(promises);
 }
 
-function _editContent(content, file) {
+function _addContent(content, file) {
 
-	if(file && content.type === IMAGE) {
-		return db.editContent(content.id, content, file).then(filePath => {return fileSystem.saveImage(filePath, file)})
-	} else if(file && content.type === VIDEO) {
-		return db.editContent(content.id, content, file).then(filePath => {return fileSystem.saveVideo(filePath, file)})
+	if(content.type === TEXT) {
+		content.data = encoder.htmlEncode(content.data);	//encode the text
+		return contentData.addContent(content)
+	} else if(content.type === IMAGE) {
+		return contentData.addFile(content).then( filePath => {return fileSystem.saveImage(filePath, file)})
+	} else if(content.type === VIDEO) {
+		return contentData.addFile(content).then( filePath => {return fileSystem.saveVideo(filePath, file)})
 	} else {
-		return db.editContent(content.id, content);
+		throw `Invalid content type: ${content.type}`;
+	}
+}
+
+function _editContent(content) {
+
+	if(content.type === TEXT) {
+		content.data = encoder.htmlEncode(content.data);
+		return contentData.editContent(content);
+	} else if(content.type === IMAGE) {
+		return contentData.editFile(content).then(filePath => {return fileSystem.saveImage(filePath, content.file)})
+	} else if(content.type === VIDEO) {
+		return contentData.editFile(content).then(filePath => {return fileSystem.saveVideo(filePath, content.file)})
+	} else {
+		throw `Invalid content type: ${content.type}`
 	}
 }
 
 function _deleteContent(content) {
 
-	return db.deleteContent(content.id).then(result => {
-		if(content.type === IMAGE) {
-			let filePath = result;
-			return fileSystem.deleteImage(filePath)
-		} else if(content.type === VIDEO) {
-			let filePath = result;
-			return fileSystem.deleteVideo(filePath)
-		}
-		return result;
-	})
-}
-
-function _addContent(content, file) {
-
 	if(content.type === TEXT) {
-		return db.addContent(content)
-	} else if(file && content.type === IMAGE) {
-		return db.addContent(content).then( filePath => {return fileSystem.saveImage(filePath, file)})
-	} else if(file && content.type === VIDEO) {
-		return db.addContent(content).then( filePath => {return fileSystem.saveVideo(filePath, file)})
+		return contentData.deleteContent(content.id);
+	} else if(content.type === IMAGE) {
+		return contentData.deleteFile(content.id).then( filePath => {return fileSystem.deleteImage(filePath, file)})
+	} else if(content.type === VIDEO) {
+		return contentData.deleteFile(content.id).then( filePath => {return fileSystem.deleteImage(filePath, file)})
 	} else {
-		return false;
+		throw `Invalid content type: ${content.type}`;
 	}
 }
 
+
 exports.getPage = getPage;
 exports.updatePage = updatePage;
+
+// async function _editContent(content) {
+
+// 	let result = await pageData.editContent(content);	
+
+// 	switch (content.type) {
+//  		case TEXT:
+//  			return pageData.editText(content);
+//  		case IMAGE:
+//  			return fileSystem.saveImage(result, file)
+//  		case VIDEO:
+//  			return fileSystem.saveVideo(result, file)
+//  		default:
+//  			throw `Invalid content type: ${content.type}`
+//  	}
+// }
