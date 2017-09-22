@@ -9,5 +9,6 @@
     "mysql": "",
     "path": "",
     "querystring": "",
+    "jsonwebtoken": ""
   }
 }
