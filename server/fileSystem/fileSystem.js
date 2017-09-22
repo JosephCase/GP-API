@@ -1,178 +1,161 @@
+'use strict';
 
-var fs = require("fs"),
+const config = require('../../config/config.js'),
+ 	fs = require("fs"),
 	im = require('imagemagick'),
-	config = require('./config'),
-	async = require('async');
-
-var contentDirectory = __dirname + '/' + config.contentDirectory;
-
-var ffmpeg = require('fluent-ffmpeg');
+	ffmpeg = require('fluent-ffmpeg');
+	
+const contentDirectory = __dirname + '/' + config.contentDirectory;
+const imageSizes = config.imageSizes;
+const videoFormats = config.videoFormats;
 
 var convertList = {}; //list of videos being converted atm
 
-function deleteFile(fileName, type, callback) {
-	console.log('DELETING A FILE');
-	var filePath = contentDirectory + fileName;
+function saveImage(path, image) {
 
-	if(type == 'img') {
-		deleteImage(filePath, callback);
-	} else if(type == 'video') {
-		deleteVideo(filePath, callback);
-	} else {
-		callback('Unrecognized file type');
+	if((typeof fileName) !== 'string') throw `Invalid file, path not equal to string`;
+
+	// save at multiple sizes
+	let promises = [];
+
+	for (var i = imageSizes.length - 1; i >= 0; i--) {
+
+		let width = imageSizes[i];
+		let sizePath = contentDirectory + path.replace('.jpg', '_x' + width + '.jpg');
+
+		tasks.push(_resizeAndSaveImage(image, resizePath, width, callback));
+
 	}
+	
+	return Promise.all(promises)
 
 }
 
-function deleteImage(filePath, all_done) {
+function _resizeAndSaveImage(image, path, targetWidth) {
 
-	var tasks = [];
+	return new Promise((resolve, reject) => {		
 
-	for (var i = config.imageSizes.length - 1; i >= 0; i--) {
-		(function(_i) {
-			tasks.push(function(callback){
-				var resizedFilePath = filePath.replace('.jpg', '_x' + config.imageSizes[_i] + '.jpg');
-				fs.unlink(resizedFilePath, function(err) {
-					if(err) {
-						console.log("Could't delete file: " + err);
-					}
-					callback();
-				});
-			})
-		}(i));	
-	}
-
-	async.parallel(tasks, all_done);
-}
-
-function deleteVideo(fileName, all_done) {
-
-	var tasks = [];
-
-	for (var i = config.videoFormats.length - 1; i >= 0; i--) {
-		(function(_i) {
-			tasks.push(function(callback){
-				fs.unlink(fileName + '.' + config.videoFormats[_i].ext, function(err) {
-					if(err) {
-						console.log("Could't delete video: " + err);
-					}
-					callback();
-				});
-			})
-		}(i));	
-	}
-
-	//if the video is still being converted we need to stop
-	if(convertList[fileName]) {
-		convertList[fileName].on('error', function() {
-			async.parallel(tasks, all_done);
-		});
-		convertList[fileName].kill();
-		delete convertList[fileName];
-	} else {
-		async.parallel(tasks, all_done);		
-	}
-}
-
-function saveFile(file, fileName, callback) {
-	console.log('//save file');
-	if((typeof fileName) === 'string') {
-		
-		var newPath = contentDirectory + fileName;
-
-		//for images
-		if(file.type.indexOf('image/') == 0) {
-			resizeImage(file.path, newPath, callback);	
-		} else if(file.type.indexOf('video/') == 0) {
-			saveVideo(file.path, newPath, callback);		
-		} else {
-			callback();
-		}
-	} else {
-		callback();
-		console.log("ERROR, file new is not string! " + fileName);
-	}
-}
-
-function resizeImage(path, newPath, all_done_callback) {
-	var tasks = [];		
-	for (var i = config.imageSizes.length - 1; i >= 0; i--) {
-		(function(_i) {
-			tasks.push(function(callback) {
-				createNewSize(path, newPath, config.imageSizes[_i], callback);
-			});
-		}(i));
-	}
-	async.parallel(tasks, all_done_callback);
-}
-
-function createNewSize(path, newPath, newSize, callback) {
-
-	console.log('//RESIZE');
-
-	var sizePath = newPath.replace('.jpg', '_x' + newSize + '.jpg');
-
-	im.identify(path, function(err, features){
-		if (err) {
-			console.log(err);
-			callback('PROBLEM WITH UPLOADED IMAGE');
-		} else {
-
-			newSize = (newSize < features.width) ? newSize : features.width;	//do not make the image larger
+		im.identify(image, function(err, features){
+			if (err) return reject(`File system - Problem identifying image error: ${err}`);
+			
+			let width = (targetWidth < features.width) ? targetWidth : features.width;	//do not make the image larger
 
 			im.resize({
-				srcPath: path,
-				dstPath: sizePath,
-				width:   newSize,
+				srcPath: image,
+				dstPath: path,
+				width:   width,
 				filter: 'Lanczos'
 			}, function(err, stdout, stderr){
 				if (err) {
-					console.log('RESIZE ERROR');
-					callback('UNABLE TO RESIZE IMAGE');
-				} else {
-				  console.log('resized!');
-				  callback();			
+					return reject(`File system - Error resizing image size: ${width}, error: ${err}, stdout: ${stdout}, stderr: ${stderr}`)
 				}
+				return resolve();				
 			});
-		}
-	});
 
-	
+		});	
+	})
 }
 
-function saveVideo(tempPath, path, callback) {
+function deleteImage(path) {
 
-	console.log('//Convert Video: ' + tempPath + ' -> ' + path);
+	let promises = [];
 
-	convertList[path] = ffmpeg(tempPath);
+	for (var i = imageSizes.length - 1; i >= 0; i--) {
+		
+		let width = imageSizes[i];
+		let sizePath = contentDirectory + path.replace('.jpg', '_x' + width + '.jpg');
 
-	//Video conversion event listeners
-	convertList[path].on('error', function(err, stout, stderr) {
-	    if(err != 'Error: ffmpeg was killed with signal SIGKILL') {
-			callback(err);
-	    }
-	})
-	.on('start', function() {
-		callback();	
-	})
-	.on('end', function() {
-		console.log('VIDEO SAVED: ' + path);
-		delete convertList[path];
-	});
+		promises.push(function(callback){
+			
+			return new Promise((resolve, reject) => {	
 
-	// create the outputs
-	for (var i = 0; i < config.videoFormats.length; i++) {
-		convertList[path].output(path + '.' + config.videoFormats[i].ext)
-			.videoCodec(config.videoFormats[i].codec)	
-			.videoBitrate(1500)
-			.fps(25)
-			.size('?x720')
-			.format(config.videoFormats[i].ext);		
+				fs.unlink(sizePath, function(err) {
+					if(err) return reject(`Error deleting image - path: ${sizePath}, err: ${err}`);
+					return resolve();
+				});
+			})
+		})
+	
 	}
 
-	// run the conversion
-	convertList[path].run();
+	return promises;
 }
 
-exports.saveFile = saveFile;
-exports.deleteFile = deleteFile;
+function saveVideo(video, path) {
+
+	//we keep a record of the videos converting, as we will not wait for them to finish before sending a response
+	processingVideos[path] = ffmpeg(path);
+
+	return new Promise((resolve, reject) => {
+
+		//Video conversion event listeners
+		processingVideos[path]
+		.on('start', function() {
+			return resolve();
+		})
+		.on('error', function(err, stout, stderr) {
+		    if(err != 'Error: ffmpeg was killed with signal SIGKILL') {	//this is when we're stopping the convesion intetionally
+				return reject(`There was a problem saving the video: ${err}`)
+		    }
+			if processingVideos[path] delete processingVideos[path];
+		})
+		.on('end', function() {
+			console.log('VIDEO SAVED: ' + path);
+			delete processingVideos[path];
+		});
+
+		// create the outputs
+		for (var i = 0; i < videoFormats.length; i++) {
+			processingVideos[path].output(path + '.' + videoFormats[i].ext)
+				.videoCodec(videoFormats[i].codec)	
+				.videoBitrate(1500)
+				.fps(25)
+				.size('?x720')
+				.format(videoFormats[i].ext);		
+		}
+
+		// run the conversion
+		processingVideos[path].run();
+
+	})
+}
+
+
+function deleteVideo(path) {
+
+	var promises = [];
+
+	for (var i = videoFormats.length - 1; i >= 0; i--) {
+
+		let formatPath = path + '.' + videoFormats[i].ext;
+
+		promises.push(function(){
+			return new Promise((resolve, reject) => {
+
+				fs.unlink(formatPath, function(err) {
+					if(err) {
+						return reject(`Could't delete video: ${err}`);
+					}
+					return resolve();
+				});				
+			})
+		})
+	}
+
+	//if the video is still being converted we need to stop it
+	if(convertList[path]) {
+		convertList[path].on('error', function() {
+			delete convertList[path];
+			return Promise.all(promises);
+		});
+		convertList[path].kill();
+	} else {
+		return Promise.all(promises);		
+	}
+}
+
+
+exports.saveImage = saveImage;
+exports.saveVideo = saveVideo;
+exports.deleteImage = deleteImage;
+exports.deleteVideo = deleteVideo;

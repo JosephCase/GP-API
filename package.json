@@ -1,6 +1,5 @@
 {
   "dependencies": {
-    "async": "",
     "cookie-parser": "",
     "express": "",
     "fluent-ffmpeg": "",
@@ -10,6 +9,5 @@
     "mysql": "",
     "path": "",
     "querystring": "",
-    "swig": ""
   }
 }

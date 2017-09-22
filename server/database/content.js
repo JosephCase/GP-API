@@ -12,10 +12,10 @@ exports.getContentByPageId = function(id) {
 					ORDER BY position`,
 			function (err, results) {
 				if(err) {
-					reject(`SQL error getting page content from database: ${err}`);
+					return reject(`SQL error getting page content from database: ${err}`);
 				}
 
-				resolve(results);
+				return resolve(results);
 
 			}
 		);
@@ -31,8 +31,8 @@ exports.addContent = function(content) {
 				VALUES (NULL, ${content.type}, ${content.data}, ${content.lang}, 
 				${content.}, ${content.position}, ${content.pageId})`
 			function(err) {
-				if(err) reject(`SQL error adding content: ${err}`)
-				resolve();
+				if(err) return reject(`SQL error adding content: ${err}`)
+				return resolve();
 			}
 		);
 	})
@@ -48,9 +48,9 @@ exports.addFile = function(content) {
 				where id = LAST_INSERT_ID();
 			SELECT content from content where id = LAST_INSERT_ID()`
 		function(err, results) {
-			if(err) reject(`SQL error adding file content: ${err}`);
+			if(err) return reject(`SQL error adding file content: ${err}`);
 			let path = results[2][0].content
-			resolve(path);
+			return resolve(path);
 		}
 	);
 }
@@ -68,9 +68,9 @@ exports.updateContent = function(content) {
 					WHERE id = ${content.id}`
 			function (err) {
 				if(err) {
-					reject(`SQL error updating content: ${err}`)
+					return reject(`SQL error updating content: ${err}`)
 				}
-				resolve();
+				return resolve();
 			}
 		);
 	})
@@ -89,10 +89,10 @@ exports.updateFile = function(content) {
 			SELECT content FROM content WHERE id = ${content.id}`
 			function (err, results) {
 				if(err) {
-					reject(`SQL error updating file: ${err}`)
+					return reject(`SQL error updating file: ${err}`)
 				}
 				let path = results[1][0]; 
-				resolve(path);
+				return resolve(path);
 			}
 		);
 	})		
@@ -105,9 +105,9 @@ exports.deleteContent = function(id) {
 		db.connection.query(
 			`DELETE FROM content WHERE id=${id};`,
 			function(err, results) {
-				if(err) reject(`SQL error deleting content: ${err}`);
+				if(err) return reject(`SQL error deleting content: ${err}`);
 				let path = results[0][0].content;
-				resolve(path);
+				return resolve(path);
 			}
 		});
 	}
@@ -120,9 +120,9 @@ exports.deleteFile = function(id) {
 			`SELECT content FROM content WHERE id=${id};
 			DELETE FROM content WHERE id=${id};`,
 			function(err, results) {
-				if(err) reject(`SQL error deleting file: ${err}`);
+				if(err) return reject(`SQL error deleting file: ${err}`);
 				let path = results[0][0].content;
-				resolve(path);
+				return resolve(path);
 			}
 		});
 	}	
