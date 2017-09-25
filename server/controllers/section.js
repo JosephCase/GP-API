@@ -1,6 +1,6 @@
 'use strict';
 
-var config = require("../../config.config.js")
+var config = require("../../config/config.js"),
 	formidable = require("formidable"),	//do I need formiddable here?#
 	db = require("../database/section.js");
 
@@ -50,7 +50,7 @@ function addPage(req, res) {
 				res.end()	//#todo
 			})
 		}
-	}
+	});
 }
 
 function reOrderPages(req, res) {

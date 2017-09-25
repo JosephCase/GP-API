@@ -21,10 +21,10 @@ function getNavLinks() {
 				if(err) {
 					reject(`SQL Error getting sections: ${err}`);
 				}
-				resolve(`${results}`);
+				resolve(results);
 			}
 		);
-	}
+	});
 
 }
 

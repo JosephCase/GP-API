@@ -1,5 +1,5 @@
 'use strict';
-const config = require("../../config.config.js");
+const config = require("../../config/config.js");
 const pageData = require("../database/page.js");
 const contentData = require("../database/content.js");
 
@@ -9,8 +9,8 @@ const IMAGE = config.contentTypes.IMAGE ;
 const VIDEO = config.contentTypes.VIDEO ;
 
 // action types
-const ADD = config.actionTypes.ADD ;
-const EDIT = config.actionTypes.EDIT ;
+const CREATE = config.actionTypes.CREATE ;
+const UPDATE = config.actionTypes.UPDATE ;
 const DELETE = config.actionTypes.DELETE ;
 
 function getPage(req, res) {
@@ -76,7 +76,7 @@ function _updatePageDetails(id, name, mainImage, visible) {
 	let promises = [];
 
 	if(name || visible) promises.push(pageData.updatePage(id, name, visible));
-	if(mainImage) promises.push(pageData.getMainImagePath(id).then( path => return fileSystem.saveFile(mainImage, path)));
+	if(mainImage) promises.push(pageData.getMainImagePath(id).then( path => { return fileSystem.saveFile(mainImage, path) }));
 
 	return Promise.all(promises);
 
@@ -94,9 +94,9 @@ function _updatePageContent(contents, files) {
 			content.file = files[propertyName];
 		}		
 
-		if(content.action === ADD) {
+		if(content.action === CREATE) {
 			promises.push(_addContent(content))
-		} else if(content.action === EDIT) {
+		} else if(content.action === UPDATE) {
 			promises.push(_editContent(content))
 		} else if(content.action === DELETE) {
 			promises.push(_deleteContent(content))

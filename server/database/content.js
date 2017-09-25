@@ -8,7 +8,7 @@ exports.getContentByPageId = function(id) {
 
 		connection.query(
 			`SELECT * FROM content
-				WHERE page.id = ${id}
+				WHERE page_id = ${id}
 					ORDER BY position`,
 			function (err, results) {
 				if(err) {
@@ -28,8 +28,8 @@ exports.addContent = function(content) {
 	return new Promise((resolve, reject) => {
 		db.connection.query( 
 			`INSERT INTO content
-				VALUES (NULL, ${content.type}, ${content.data}, ${content.lang}, 
-				${content.}, ${content.position}, ${content.pageId})`
+				VALUES (NULL, ${content.type}, ${content.data}, ${content.size}, 
+				${content.lang}, ${content.position}, ${content.pageId})`,
 			function(err) {
 				if(err) return reject(`SQL error adding content: ${err}`)
 				return resolve();
@@ -42,11 +42,11 @@ exports.addContent = function(content) {
 exports.addFile = function(content) {
 	db.connection.query( 
 		`INSERT INTO content
-			VALUES (NULL, ${content.type}, '', ${content.lang}, 
-			${content.}, ${content.position}, ${content.pageId});
-			UPDATE content set content = CONCAT('file_', LAST_INSERT_ID(), ${(content.type == 'img') ? '.jpg' : '')}) 
+			VALUES (NULL, ${content.type}, '', ${content.size}, 
+			${content.lang}, ${content.position}, ${content.pageId});
+			UPDATE content set content = CONCAT('file_', LAST_INSERT_ID(), ${(content.type == 'img') ? '.jpg' : ''}) 
 				where id = LAST_INSERT_ID();
-			SELECT content from content where id = LAST_INSERT_ID()`
+			SELECT content from content where id = LAST_INSERT_ID()`,
 		function(err, results) {
 			if(err) return reject(`SQL error adding file content: ${err}`);
 			let path = results[2][0].content
@@ -65,7 +65,7 @@ exports.updateContent = function(content) {
 				size =		COALESCE(${content.size},size),
 				language =	COALESCE(${content.lang},language),
 				position =	COALESCE(${content.position},position)
-					WHERE id = ${content.id}`
+					WHERE id = ${content.id}`,
 			function (err) {
 				if(err) {
 					return reject(`SQL error updating content: ${err}`)
@@ -86,7 +86,7 @@ exports.updateFile = function(content) {
 				language =	COALESCE(${content.lang},language),
 				position =	COALESCE(${content.position},position)
 					WHERE id = ${content.id};
-			SELECT content FROM content WHERE id = ${content.id}`
+			SELECT content FROM content WHERE id = ${content.id}`,
 			function (err, results) {
 				if(err) {
 					return reject(`SQL error updating file: ${err}`)
@@ -109,8 +109,8 @@ exports.deleteContent = function(id) {
 				let path = results[0][0].content;
 				return resolve(path);
 			}
-		});
-	}
+		);
+	});
 }
 
 exports.deleteFile = function(id) {
@@ -124,6 +124,6 @@ exports.deleteFile = function(id) {
 				let path = results[0][0].content;
 				return resolve(path);
 			}
-		});
-	}	
+		);
+	});
 }

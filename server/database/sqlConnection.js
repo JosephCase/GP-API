@@ -1,7 +1,7 @@
 'use strict';
 
 var mysql = require("mysql"),
-    config = require("../config/config.js");
+    config = require("../../config/config.js");
 
 
 function createConnection() {

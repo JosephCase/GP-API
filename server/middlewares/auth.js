@@ -3,11 +3,11 @@
 const JWT_SECRET = require('../../config/config.js').jwtSecret,
 	jwt = require('jsonwebtoken');
 
-export.authenticateJWT = (res, req, next) => {
+exports.authenticateJWT = (res, req, next) => {
 
-	let token = req.headers['x-access-token'];
+	let token = req.get('x-access-token');
 
-	if (!token) return res.status.(403).send({
+	if (!token) return res.status(403).send({
 		success: false,
 		message: 'No Token provided'
 	})
@@ -17,7 +17,7 @@ export.authenticateJWT = (res, req, next) => {
 	} catch (err) {
 		res.status(401).send({
 			success: false,
-			message: 'Failed to authenticate token';
+			message: 'Failed to authenticate token'
 		});		
 	}
 
