@@ -3,7 +3,7 @@
 const JWT_SECRET = require('../../config/config.js').jwtSecret,
 	jwt = require('jsonwebtoken');
 
-exports.authenticateJWT = (res, req, next) => {
+exports.authenticateJWT = (req, res, next) => {
 
 	let token = req.get('x-access-token');
 

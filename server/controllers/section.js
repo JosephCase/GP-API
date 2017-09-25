@@ -41,12 +41,13 @@ function addPage(req, res) {
 					id: page.id,
 					name: page.name,
 					links: {
-						self: `${config.rootPath}/page/${id}`
+						self: `${config.rootPath}/page/${page.id}`
 					}
 				};
 				res.end(JSON.stringify(resBody));
 			})
-			.catch( error => {
+			.catch( err => {
+				console.log(`Error adding new page: ${err}`)
 				res.end()	//#todo
 			})
 		}

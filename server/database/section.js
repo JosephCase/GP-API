@@ -54,9 +54,9 @@ function addPage(sectionId, pageName) {
 			function(err, results) {
 				if(err) {					
 					console.log(`SQL Error adding page: ${err}`);
-					reject(err);	//response report error	T#D
+					return reject(err);	//response report error	T#D
 				}
-				resolve(results[0]);
+				return resolve(results[1][0]);
 			}
 		)
 	});

@@ -1,6 +1,8 @@
 exports.authenticateUser = (username) => {
-	return {
-		username: giusy,
-		password: nuit123
-	}	
+	return new Promise((resolve, reject) => {
+		resolve({
+			username: 'giusy',
+			password: 'nuit123'
+		})
+	})
 }

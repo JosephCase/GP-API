@@ -25,5 +25,6 @@ export default {
                 CREATE: 'add',
                 UPDATE: 'edit',
                 DELETE: 'delete'
-        }
+        },
+        jwtSecret: ''
 }

@@ -3,6 +3,7 @@
 const config = require('../config/config.js');
 
 const express = require('express');
+const bodyParser = require('body-parser');
 
 const authController = require("./controllers/auth");
 const navigationController = require("./controllers/navigation");
@@ -26,13 +27,17 @@ router.get('/favicon.ico', function(req, res) {
 
 // non-protected routes
 router.get("/navigation", (req, res) => { navigationController.getNavLinks(req, res) });
-router.get("/section/:id", (req, res) => { sectionController.getSection(req, res) });
+router.get("/sections/:id", (req, res) => { sectionController.getSection(req, res) });
 router.get("/pages/:id", (req, res) => { pageController.getPage(req, res) });
 
-router.post("/auth"), (req, res) => {authController.authenticateWithPassword(req, res)}
+router.use(bodyParser.json());
+
+router.post("/auth", (req, res) => {authController.authenticateWithPassword(req, res)});
 
 // protected routes
 router.use(authMiddleware.authenticateJWT);
+
+router.get("/testAuth/:id", (req, res) => { sectionController.getSection(req, res) });
 
 router.post("/sections/:id/pages", (req, res) => { sectionController.addPage(req, res) });
 router.put("/sections/:id/pages", (req, res) => { sectionController.reOrderPages(req, res) });
