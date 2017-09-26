@@ -1,8 +1,12 @@
+'use strict';
+
+const user = require('../../config/config.js').user;
+
 exports.authenticateUser = (username) => {
 	return new Promise((resolve, reject) => {
 		resolve({
-			username: 'giusy',
-			password: 'nuit123'
+			username: user.username,
+			password: user.password
 		})
 	})
 }

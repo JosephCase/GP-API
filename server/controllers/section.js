@@ -2,31 +2,45 @@
 
 var config = require("../../config/config.js"),
 	formidable = require("formidable"),	//do I need formiddable here?#
-	db = require("../database/section.js");
+	db = require("../database/section.js"),
+	pageHelper = require("../helpers/pageHelper"),
+	fileSystem = require("../fileSystem/fileSystem.js");
 
 function getSection(req, res) {
-	var sectionId = req.params.id;
+	let sectionId = req.params.id;
 
-	Promise.all([db.getSection(sectionId), db.getSectionPages(sectionId)])
+	let promises = [];
+	var embedPages = req.query.embedPages;
+
+	promises.push(db.getSection(sectionId));
+	if (embedPages) promises.push(db.getSectionPages(sectionId));
+
+	Promise.all(promises)
 	
 	.then( results => {
 		let section = results[0];
-		let pages = results[1];
-		section.pages = pages;
-		res.end(JSON.stringify(section));
+		if(embedPages && results.length > 1) {			
+			let pages = pageHelper.populatePageUrls(results[1]);
+			section.pages = pages;
+		}
+
+		res.json(section);
 	})
 	.catch( err => {
-		console.log(err);
-		res.end()	//#todo
+		console.log(`Error: Getting section details, ${err}`);
+		res.status(500).end()	//#todo
 	})
 
 }
 
+
+
 function addPage(req, res) {
 
 	var form = new formidable.IncomingForm();
+	let resBody;
 
-	form.parse(req, function(err, fields) {
+	form.parse(req, function(err, fields, files) {
 
 		if(err) {
 			console.log(`Error parsing add page form: ${err}`);
@@ -37,14 +51,21 @@ function addPage(req, res) {
 
 			db.addPage(sectionId, fields.name)	
 			.then( page => {
-				let resBody = {
+				resBody = {
 					id: page.id,
 					name: page.name,
+					visible: page.visible,
+					mainImageUrl: page.mainImage_url,
 					links: {
-						self: `${config.rootPath}/page/${page.id}`
+						self: `/pages/${page.id}`
 					}
 				};
-				res.end(JSON.stringify(resBody));
+				if(!files.mainImage) return Promise.resolve();
+				
+				return fileSystem.saveImage(files.mainImage, page.mainImage_url);
+			})
+			.then(() => {
+				res.json(resBody);				
 			})
 			.catch( err => {
 				console.log(`Error adding new page: ${err}`)

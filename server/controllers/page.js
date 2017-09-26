@@ -2,6 +2,7 @@
 const config = require("../../config/config.js");
 const pageData = require("../database/page.js");
 const contentData = require("../database/content.js");
+const fileSystem = require("../fileSystem/fileSystem.js");
 
 // content types
 const TEXT = config.contentTypes.TEXT ;
@@ -19,12 +20,18 @@ function getPage(req, res) {
 
 	if(!pageId) res.end();
 
-	Promise.all([pageData.getPage(pageId), contentData.getContentByPageId(pageId)])
+	let embedContent = req.query.embedContent;
+	let promises = [];
+
+	promises.push(pageData.getPage(pageId));
+	if(embedContent) promises.push(contentData.getContentByPageId(pageId));
+
+	Promise.all(promises)
 	.then( results => {
 		let page = results[0];
 		page.content = results[1];
 
-		res.end(JSON.stringify(page));
+		res.json(page);
 	})	
 	.catch( err => {
 		console.log(err);

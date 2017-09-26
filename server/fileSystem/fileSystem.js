@@ -11,9 +11,11 @@ const videoFormats = config.videoFormats;
 
 var convertList = {}; //list of videos being converted atm
 
-function saveImage(path, image) {
+function saveImage(image, path) {
 
-	if((typeof fileName) !== 'string') throw `Invalid file, path not equal to string`;
+	console.log(image);
+
+	if((typeof image) !== 'string') throw `Invalid file, path not equal to string`;
 
 	// save at multiple sizes
 	let promises = [];
@@ -23,7 +25,7 @@ function saveImage(path, image) {
 		let width = imageSizes[i];
 		let sizePath = contentDirectory + path.replace('.jpg', '_x' + width + '.jpg');
 
-		tasks.push(_resizeAndSaveImage(image, resizePath, width, callback));
+		promises.push(_resizeAndSaveImage(image, sizePath, width));
 
 	}
 	
@@ -97,7 +99,7 @@ function saveVideo(video, path) {
 		    if(err != 'Error: ffmpeg was killed with signal SIGKILL') {	//this is when we're stopping the convesion intetionally
 				return reject(`There was a problem saving the video: ${err}`)
 		    }
-			if processingVideos[path] delete processingVideos[path];
+			if (processingVideos[path]) delete processingVideos[path];
 		})
 		.on('end', function() {
 			console.log('VIDEO SAVED: ' + path);

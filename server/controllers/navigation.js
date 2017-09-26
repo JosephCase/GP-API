@@ -1,13 +1,15 @@
 'use strict';
 
-const db = require("../database/navigation.js");
+const db = require("../database/navigation.js"),
+	pageHelper = require("../helpers/pageHelper");;
 
 // get the page content and send it to the client
 function getNavLinks(req, res) {
 
 	db.getNavLinks()
 	.then( sections => {
-		res.end(JSON.stringify(sections));
+		sections = pageHelper.populatePageUrls(sections);
+		res.json(sections);
 	})
 	.catch( err => {
         console.log(err);

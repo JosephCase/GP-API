@@ -30,7 +30,8 @@ function getSectionPages(id) {
 				page.id,
 				page.name,
 				page.visible,
-				page.position
+				page.position,
+				page.mainImage_url
 				FROM page
 					where parentPage_id=${id}`, 
 			function (err, results) {
@@ -50,7 +51,7 @@ function addPage(sectionId, pageName) {
 	return new Promise((resolve, reject) => {
 		connection.query(
 			`INSERT INTO page (name, parentPage_id, visible) VALUES(${pageName},${sectionId},0);
-			select id, name	FROM page WHERE id = LAST_INSERT_ID();`,
+			select id, name, visible, mainImage_url	FROM page WHERE id = LAST_INSERT_ID();`,
 			function(err, results) {
 				if(err) {					
 					console.log(`SQL Error adding page: ${err}`);
