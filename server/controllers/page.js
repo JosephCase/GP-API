@@ -2,7 +2,8 @@
 const config = require("../../config/config.js");
 const pageData = require("../database/page.js");
 const contentData = require("../database/content.js");
-const fileSystem = require("../fileSystem/fileSystem.js");
+const imageHandler = require("../fileSystem/imageHandler.js");
+const videoHandler = require("../fileSystem/videoHandler.js");
 
 // content types
 const TEXT = config.contentTypes.TEXT ;
@@ -83,7 +84,7 @@ function _updatePageDetails(id, name, mainImage, visible) {
 	let promises = [];
 
 	if(name || visible) promises.push(pageData.updatePage(id, name, visible));
-	if(mainImage) promises.push(pageData.getMainImagePath(id).then( path => { return fileSystem.saveFile(mainImage, path) }));
+	if(mainImage) promises.push(pageData.getMainImagePath(id).then( path => { return imageHandler.saveImage(mainImage, path) }));
 
 	return Promise.all(promises);
 
@@ -122,9 +123,9 @@ function _addContent(content, file) {
 		content.data = encoder.htmlEncode(content.data);	//encode the text
 		return contentData.addContent(content)
 	} else if(content.type === IMAGE) {
-		return contentData.addFile(content).then( filePath => {return fileSystem.saveImage(filePath, file)})
+		return contentData.addFile(content).then( filePath => {return imageHandler.saveImage(filePath, file)})
 	} else if(content.type === VIDEO) {
-		return contentData.addFile(content).then( filePath => {return fileSystem.saveVideo(filePath, file)})
+		return contentData.addFile(content).then( filePath => {return videoHandler.saveVideo(filePath, file)})
 	} else {
 		throw `Invalid content type: ${content.type}`;
 	}
@@ -136,9 +137,9 @@ function _editContent(content) {
 		content.data = encoder.htmlEncode(content.data);
 		return contentData.editContent(content);
 	} else if(content.type === IMAGE) {
-		return contentData.editFile(content).then(filePath => {return fileSystem.saveImage(filePath, content.file)})
+		return contentData.editFile(content).then(filePath => {return imageHandler.saveImage(filePath, content.file)})
 	} else if(content.type === VIDEO) {
-		return contentData.editFile(content).then(filePath => {return fileSystem.saveVideo(filePath, content.file)})
+		return contentData.editFile(content).then(filePath => {return videoHandler.saveVideo(filePath, content.file)})
 	} else {
 		throw `Invalid content type: ${content.type}`
 	}
@@ -149,9 +150,9 @@ function _deleteContent(content) {
 	if(content.type === TEXT) {
 		return contentData.deleteContent(content.id);
 	} else if(content.type === IMAGE) {
-		return contentData.deleteFile(content.id).then( filePath => {return fileSystem.deleteImage(filePath, file)})
+		return contentData.deleteFile(content.id).then( filePath => {return imageHandler.deleteImage(filePath, file)})
 	} else if(content.type === VIDEO) {
-		return contentData.deleteFile(content.id).then( filePath => {return fileSystem.deleteImage(filePath, file)})
+		return contentData.deleteFile(content.id).then( filePath => {return videoHandler.deleteVideo(filePath, file)})
 	} else {
 		throw `Invalid content type: ${content.type}`;
 	}

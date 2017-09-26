@@ -19,7 +19,7 @@ router.use(function(req, res, next) {
     console.log("Request: "  + req.url);
     next();
 });
-router.use('/content', express.static(__dirname + '/content'));
+router.use('/content', express.static(global.appRoute + '/content'));
 
 router.get('/favicon.ico', function(req, res) {
     res.status(204);

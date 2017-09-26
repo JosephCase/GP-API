@@ -1,8 +1,9 @@
 'use strict';
 
+global.appRoute = __dirname;
+
 const config = require('./config/config.js');
 const app = require('./server/router.js');
-
 
 app.listen(config.port, () => {
 

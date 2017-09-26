@@ -51,13 +51,14 @@ function addPage(sectionId, pageName) {
 	return new Promise((resolve, reject) => {
 		connection.query(
 			`INSERT INTO page (name, parentPage_id, visible) VALUES(${pageName},${sectionId},0);
+			UPDATE page set mainImage_url = CONCAT('mainImage_', LAST_INSERT_ID(), '.jpg') where id = LAST_INSERT_ID();
 			select id, name, visible, mainImage_url	FROM page WHERE id = LAST_INSERT_ID();`,
 			function(err, results) {
 				if(err) {					
 					console.log(`SQL Error adding page: ${err}`);
 					return reject(err);	//response report error	T#D
 				}
-				return resolve(results[1][0]);
+				return resolve(results[2][0]);
 			}
 		)
 	});

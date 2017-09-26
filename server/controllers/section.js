@@ -4,7 +4,7 @@ var config = require("../../config/config.js"),
 	formidable = require("formidable"),	//do I need formiddable here?#
 	db = require("../database/section.js"),
 	pageHelper = require("../helpers/pageHelper"),
-	fileSystem = require("../fileSystem/fileSystem.js");
+	imageHandler = require("../fileSystem/imageHandler.js");
 
 function getSection(req, res) {
 	let sectionId = req.params.id;
@@ -62,7 +62,7 @@ function addPage(req, res) {
 				};
 				if(!files.mainImage) return Promise.resolve();
 				
-				return fileSystem.saveImage(files.mainImage, page.mainImage_url);
+				return imageHandler.saveImage(files.mainImage, page.mainImage_url);
 			})
 			.then(() => {
 				res.json(resBody);				
