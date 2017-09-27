@@ -19,19 +19,20 @@ exports.authenticateJWT = (req, res, next) => {
 		res.status(401).json({
 			success: false,
 			message: 'Failed to authenticate token'
-		});		
+		});	
+		return;	
 	}
 
-	authData.getUser(decoded.username)
+	authData.getUser(decoded.user)
 	.then((user) => {
 		if(!user) {
 			return res.status(401).json({
 				success: false,
 				message: 'Invalid token'
 			})
-			return next();
 		}
-	}
+		return next();
+	})
 	.catch(err => {
 		console.log(err);
 		res.status(500).json({

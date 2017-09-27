@@ -10,24 +10,25 @@ function getSection(req, res) {
 	let sectionId = req.params.id;
 
 	let promises = [];
-	var embedPages = req.query.embedPages;
+	let embedPages = (req.query.embed === 'pages');
+	let filterVisible = (req.query.visible && req.query.visible.toLowerCase() === 'true');
 
 	promises.push(db.getSection(sectionId));
 	if (embedPages) promises.push(db.getSectionPages(sectionId));
 
-	Promise.all(promises)
-	
+	Promise.all(promises)	
 	.then( results => {
 		let section = results[0];
 		if(embedPages && results.length > 1) {			
 			let pages = pageHelper.populatePageUrls(results[1]);
+			if(filterVisible) pages = pageHelper.filterVisible(pages);
 			section.pages = pages;
 		}
 
 		res.json(section);
 	})
 	.catch( err => {
-		console.log(`Error: Getting section details, ${err}`);
+		console.log(err);
 		res.status(500).json({message: "Internal server error retrieving section details.", error: err})	//#todo
 	})
 
@@ -88,7 +89,7 @@ function reOrderPages(req, res) {
 		} else {
 
 			db.reOrderPages(pages)
-			.then(response.end)
+			.then(res.end)
 			.catch( err => {
 				console.log(err)
 				res.status(500).json({message: "Internal server error re-ordering pages.", error: err});

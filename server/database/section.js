@@ -43,8 +43,6 @@ function getSectionPages(id) {
 	});
 }
 
-//# TODO add update of mainImage url after insert
-
 function addPage(sectionId, pageName) {
 	return new Promise((resolve, reject) => {
 		connection.query(

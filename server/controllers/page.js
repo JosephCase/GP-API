@@ -4,6 +4,8 @@ const pageData = require("../database/page.js");
 const contentData = require("../database/content.js");
 const imageHandler = require("../fileSystem/imageHandler.js");
 const videoHandler = require("../fileSystem/videoHandler.js");
+const formidable = require("formidable");	//do I need formiddable here?#
+
 
 // content types
 const TEXT = config.contentTypes.TEXT ;
@@ -21,7 +23,7 @@ function getPage(req, res) {
 
 	if(!pageId) res.end();
 
-	let embedContent = req.query.embedContent;
+	let embedContent = (req.query.embed === 'content');
 	let promises = [];
 
 	promises.push(pageData.getPage(pageId));
@@ -43,7 +45,7 @@ function getPage(req, res) {
 
 function updatePage(req, res) {
 
-	let id = res.params.id;
+	let id = req.params.id;
 
 	if (!id) {
 		console.log(`No id provided`);

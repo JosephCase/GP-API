@@ -6,9 +6,14 @@ const db = require("../database/navigation.js"),
 // get the page content and send it to the client
 function getNavLinks(req, res) {
 
+	let filterVisible = (req.query.visible && req.query.visible.toLowerCase() === 'true');
+
 	db.getNavLinks()
 	.then( sections => {
 		sections = pageHelper.populatePageUrls(sections);
+
+		if(filterVisible) sections = pageHelper.filterVisible(sections);
+
 		res.json(sections);
 	})
 	.catch( err => {

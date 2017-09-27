@@ -24,7 +24,7 @@ exports.authenticateWithPassword = (req, res) => {
 			});			
 		}
 
-		let token = jwt.sign(user.username, JWT_SECRET, {expiresIn: '1d'});
+		let token = jwt.sign({user: user.username}, JWT_SECRET, {expiresIn: '1d'});
 
 		res.json({
 			success: true,

@@ -7,3 +7,10 @@ exports.populatePageUrls = (pages) => {
 	}
 	return pages;
 }
+
+exports.filterVisible = (pages) => {
+	let filteredPages = pages.filter((page) => {
+		return page.visible == true;
+	});
+	return filteredPages;
+}
