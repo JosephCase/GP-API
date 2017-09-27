@@ -36,7 +36,7 @@ function getPage(req, res) {
 	})	
 	.catch( err => {
 		console.log(err);
-		res.end()	//#todo
+		res.status(500).json({message: "Internal server error retrieving page details.", error: err});
 	})
 
 }
@@ -47,7 +47,8 @@ function updatePage(req, res) {
 
 	if (!id) {
 		console.log(`No id provided`);
-		req.end();
+		res.status(400).json({message: "Bad request, no page ID provided.", error: `Bad request, 
+			no page ID provided. ID = ${id}`});
 	}
 
 	var form = new formidable.IncomingForm();
@@ -57,8 +58,7 @@ function updatePage(req, res) {
 
 		if(err) {
 			console.log(`Error parsing update page form: ${err}`);
-			res.statusCode = 500;	//#TODO
-			res.end();
+			res.status(500).json({message: "Bad request, unable to parse update page form.", error: err});
 		}
 
 		let contents = JSON.parse(fields.content);
@@ -74,6 +74,8 @@ function updatePage(req, res) {
 			console.log(err);
 			res.statusCode = 500;	//#TODO
 			res.end();
+
+			res.status(500).json({message: "Internal server error updating page details", error: err});
 		})
 
 	});

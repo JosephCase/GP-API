@@ -28,7 +28,7 @@ function getSection(req, res) {
 	})
 	.catch( err => {
 		console.log(`Error: Getting section details, ${err}`);
-		res.status(500).end()	//#todo
+		res.status(500).json({message: "Internal server error retrieving section details.", error: err})	//#todo
 	})
 
 }
@@ -44,7 +44,7 @@ function addPage(req, res) {
 
 		if(err) {
 			console.log(`Error parsing add page form: ${err}`);
-			response.end();
+			res.status(400).json({message: "Bad request, error parsing add page form.", error: err});
 		} else {
 
 			var sectionId = req.params.id;
@@ -65,11 +65,12 @@ function addPage(req, res) {
 				return imageHandler.saveImage(files.mainImage, page.mainImage_url);
 			})
 			.then(() => {
-				res.json(resBody);				
+				res.status(201).json(resBody);				
 			})
 			.catch( err => {
 				console.log(`Error adding new page: ${err}`)
-				res.end()	//#todo
+				res.status(500).json({message: "Internal server error creating page.", error: err});
+
 			})
 		}
 	});
@@ -83,14 +84,13 @@ function reOrderPages(req, res) {
 		
 		if(error) {
 			console.log(`Error parsing re-order section form: ${error}`);
-			res.end();	//response report error	T#D
+			res.status(400).json({message: "Bad request, re-order section form.", error: err});
 		} else {
 
 			db.reOrderPages(pages)
 			.then(response.end)
 			.catch( err => {
-				// res.statusCode = 500;
-				res.end();	//response report error	T#D
+				res.status(500).json({message: "Internal server error re-ordering pages.", error: err});
 			})		
 		}		
 

@@ -13,8 +13,7 @@ function getNavLinks(req, res) {
 	})
 	.catch( err => {
         console.log(err);
-        res.statusCode = 500;
-		res.end();	//response report error	T#D
+		res.status(500).json({message: "Problem getting navigation links", error: err});	//response report error	T#D
 	});
 
 }
