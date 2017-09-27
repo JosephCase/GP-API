@@ -40,7 +40,7 @@ router.use(authMiddleware.authenticateJWT);
 router.get("/testAuth/:id", (req, res) => { sectionController.getSection(req, res) });
 
 router.post("/sections/:id/pages", (req, res) => { sectionController.addPage(req, res) });
-router.put("/sections/:id/pages", (req, res) => { sectionController.reOrderPages(req, res) });
+router.patch("/sections/:id/pages", (req, res) => { sectionController.reOrderPages(req, res) });
 router.patch("/pages/:id", (req, res) => { pageController.updatePage(req, res) });
 
 module.exports = router;

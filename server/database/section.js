@@ -63,16 +63,16 @@ function reOrderPages(pages) {
 
 	var query = '';
 
-	for(var pageName in pages) {
-		query += `UPDATE page SET position=${pages[pageName].position} 
-					WHERE id=${pages[pageName].id};`
-	}
+	pages.forEach( page => {
+		query += `UPDATE page SET position=${page.position} 
+					WHERE id=${page.id};`
+	});
 
 	return new Promise((resolve, reject) => {		
 		connection.query(
 			query, function (err, results) {
 				if(err) {
-					return reject(`SQL Error re-ordering sections, ${err}`);	//response report error	T#D
+					return reject(`SQL Error re-ordering sections, ${err}`);
 				}
 				return resolve();
 			}

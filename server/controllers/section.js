@@ -79,24 +79,17 @@ function addPage(req, res) {
 
 function reOrderPages(req, res) {
 
-	var form = new formidable.IncomingForm();
+	let pages = req.body;
 
-	form.parse(req, function(err, pages) {
-		
-		if(err) {
-			console.log(`Error parsing re-order section form: ${err}`);
-			res.status(400).json({message: "Bad request, re-order section form.", error: err});
-		} else {
+	db.reOrderPages(pages)
+	.then(() => {
+		res.end();
+	})
+	.catch( err => {
+		console.log(err)
+		res.status(500).json({message: "Internal server error re-ordering pages.", error: err});
+	});
 
-			db.reOrderPages(pages)
-			.then(res.end)
-			.catch( err => {
-				console.log(err)
-				res.status(500).json({message: "Internal server error re-ordering pages.", error: err});
-			})		
-		}		
-
-	});	
 }
 
 exports.getSection = getSection;

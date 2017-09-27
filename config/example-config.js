@@ -1,6 +1,6 @@
 export default {
         reqTimeout: 600000,
-        port: 8080,
+        port: 8081,
         contentDirectory: "content/",
         imageSizes: [500, 700, 1000, 1400],
         videoFormats: [{"ext": "mp4", "codec": "libx264"}, {"ext": "webm", "codec": "libvpx"}],
