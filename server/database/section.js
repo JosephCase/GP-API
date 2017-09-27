@@ -13,10 +13,9 @@ function getSection(id) {
 					where id=${id}`, 
 			function (err, results) {
 				if(err) {
-					console.log(`SQL Error re-ordering sections: ${err}`);
-					reject(err);	//response report error	T#D
+					return reject(`SQL Error re-ordering sections, ${err}`);
 				}
-				resolve(results[0]);
+				return resolve(results[0]);
 			}
 		);
 	});
@@ -36,10 +35,9 @@ function getSectionPages(id) {
 					where parentPage_id=${id}`, 
 			function (err, results) {
 				if(err) {
-					console.log(`SQL Error re-ordering sections: ${err}`);
-					reject(err);	//response report error	T#D
+					return reject(`SQL Error re-ordering sections, ${err}`);
 				}
-				resolve(results);
+				return resolve(results);
 			}
 		);
 	});
@@ -54,9 +52,8 @@ function addPage(sectionId, pageName) {
 			UPDATE page set mainImage_url = CONCAT('mainImage_', LAST_INSERT_ID(), '.jpg') where id = LAST_INSERT_ID();
 			select id, name, visible, mainImage_url	FROM page WHERE id = LAST_INSERT_ID();`,
 			function(err, results) {
-				if(err) {					
-					console.log(`SQL Error adding page: ${err}`);
-					return reject(err);	//response report error	T#D
+				if(err) {			
+					return reject(`SQL Error adding page, ${err}`);	//response report error	T#D
 				}
 				return resolve(results[2][0]);
 			}
@@ -77,10 +74,9 @@ function reOrderPages(pages) {
 		connection.query(
 			query, function (err, results) {
 				if(err) {
-					console.log(`SQL Error re-ordering sections: ${err}`);
-					reject(`${err}`);	//response report error	T#D
+					return reject(`SQL Error re-ordering sections, ${err}`);	//response report error	T#D
 				}
-				resolve();
+				return resolve();
 			}
 		);
 	})

@@ -10,7 +10,7 @@ function getPage(id) {
 			`SELECT name, mainImage_url, id, visible FROM page where id = ${id}`,
 			function (err, results) {
 				if(err) {
-					reject(`SQL error getting page details: ${err}`);
+					reject(`SQL error getting page details, ${err}`);
 				}
 
 				resolve(results[0]);
@@ -29,7 +29,7 @@ function updatePage(id, name, visible) {
 			`UPDATE page SET name=COALESCE(${name},name), visible=COALESCE(${visible},visible) WHERE id=${id}`,
 			function(err, results) {
 				if(err) {
-					reject(`SQL error updating page details: ${err}`);
+					reject(`SQL error updating page details, ${err}`);
 				}
 				resolve();
 			}
@@ -46,7 +46,7 @@ function getMainImagePath(id) {
 			`SELECT content FROM content WHERE id = ${id}`,
 			function(err, results) {
 				if(err) {
-					reject(`SQL error getting main image path: ${err}`);
+					reject(`SQL error getting main image path, ${err}`);
 				}
 				resolve(results[0]);
 			}

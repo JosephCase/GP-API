@@ -9,7 +9,7 @@ exports.authenticateWithPassword = (req, res) => {
 	let username = req.body.username;
 	let password = req.body.password;
 
-	authData.authenticateUser(username)
+	authData.getUser(username)
 	.then((user) => {
 		if(!user) {
 			return res.status(401).send({
@@ -24,11 +24,18 @@ exports.authenticateWithPassword = (req, res) => {
 			});			
 		}
 
-		let token = jwt.sign(user, JWT_SECRET, {expiresIn: '1d'});
+		let token = jwt.sign(user.username, JWT_SECRET, {expiresIn: '1d'});
 
 		res.json({
 			success: true,
 			token: token
 		})
-	});
+	})
+	.catch(err => {
+		console.log(err);
+		res.status(500).json({
+			message: "Internal server error retrieving users from the database.",
+			error: err
+		})
+	})
 }

@@ -68,7 +68,7 @@ function addPage(req, res) {
 				res.status(201).json(resBody);				
 			})
 			.catch( err => {
-				console.log(`Error adding new page: ${err}`)
+				console.log(err)
 				res.status(500).json({message: "Internal server error creating page.", error: err});
 
 			})
@@ -80,16 +80,17 @@ function reOrderPages(req, res) {
 
 	var form = new formidable.IncomingForm();
 
-	form.parse(req, function(error, pages) {
+	form.parse(req, function(err, pages) {
 		
-		if(error) {
-			console.log(`Error parsing re-order section form: ${error}`);
+		if(err) {
+			console.log(`Error parsing re-order section form: ${err}`);
 			res.status(400).json({message: "Bad request, re-order section form.", error: err});
 		} else {
 
 			db.reOrderPages(pages)
 			.then(response.end)
 			.catch( err => {
+				console.log(err)
 				res.status(500).json({message: "Internal server error re-ordering pages.", error: err});
 			})		
 		}		

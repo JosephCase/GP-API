@@ -72,9 +72,6 @@ function updatePage(req, res) {
 		})
 		.catch( err => {
 			console.log(err);
-			res.statusCode = 500;	//#TODO
-			res.end();
-
 			res.status(500).json({message: "Internal server error updating page details", error: err});
 		})
 
@@ -163,19 +160,3 @@ function _deleteContent(content) {
 
 exports.getPage = getPage;
 exports.updatePage = updatePage;
-
-// async function _editContent(content) {
-
-// 	let result = await pageData.editContent(content);	
-
-// 	switch (content.type) {
-//  		case TEXT:
-//  			return pageData.editText(content);
-//  		case IMAGE:
-//  			return fileSystem.saveImage(result, file)
-//  		case VIDEO:
-//  			return fileSystem.saveVideo(result, file)
-//  		default:
-//  			throw `Invalid content type: ${content.type}`
-//  	}
-// }
