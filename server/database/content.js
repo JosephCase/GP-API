@@ -1,6 +1,9 @@
 'use strict';
 
 var connection = require('./sqlConnection.js').connection;
+const config = require("../../config/config.js");
+
+const IMAGE = config.contentTypes.IMAGE ;
 
 exports.getContentByPageId = function(id) {
 
@@ -30,7 +33,7 @@ exports.addContent = function(content) {
 		connection.query( 
 			`INSERT INTO content
 				VALUES (NULL, ?, ?, ?, ?, ?, ?)`,
-			[content.type, content.data, content.size, content.lang, content.position, content.pageId],
+			[content.type, content.data, content.size, content.language, content.position, content.pageId],
 			function(err) {
 				if(err) return reject(`SQL error adding content, ${err}`)
 				return resolve();
@@ -47,7 +50,7 @@ exports.addFile = function(content) {
 		connection.query( 
 			`INSERT INTO content
 				VALUES (NULL, ?, '', ?, ?, ?, ?);
-				UPDATE content set content = CONCAT('file_', LAST_INSERT_ID(), ${(content.type == 'img') ? '.jpg' : ''}) 
+				UPDATE content set content = CONCAT('file_', LAST_INSERT_ID(), ${(content.type === IMAGE) ? "'.jpg'" : "''"}) 
 					where id = LAST_INSERT_ID();
 				SELECT content from content where id = LAST_INSERT_ID()`,
 			[content.type, content.size, content.language, content.position, content.pageId],
@@ -75,7 +78,7 @@ exports.updateContent = function(content) {
 				language=COALESCE(?,language),
 				position=COALESCE(?,position)
 					WHERE id=?;`,
-			[content.data, content.size, content.lang, content.position, content.id],
+			[content.data, content.size, content.language, content.position, content.id],
 			function (err) {
 				if(err) {
 					return reject(`SQL error updating content, ${err}`)
@@ -97,7 +100,7 @@ exports.updateFile = function(content) {
 				position=COALESCE(?,position)
 					WHERE id=?;
 			SELECT content imagePath FROM content WHERE id = ?`,
-			[content.size, content.lang, content.position, content.id, content.id],
+			[content.size, content.language, content.position, content.id, content.id],
 			function (err, results) {
 				if(err) {
 					return reject(`SQL error updating file, ${err}`)

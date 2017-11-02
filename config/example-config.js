@@ -18,12 +18,12 @@ export default {
         },
         contentTypes: {
                 TEXT: 'text',
-                IMAGE: 'img',
+                IMAGE: 'image',
                 VIDEO: 'video'
         },
         actionTypes: {
-                CREATE: 'add',
-                UPDATE: 'edit',
+                CREATE: 'create',
+                UPDATE: 'update',
                 DELETE: 'delete'
         },
         jwtSecret: ''

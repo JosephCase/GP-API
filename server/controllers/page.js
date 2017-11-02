@@ -6,7 +6,6 @@ const imageHandler = require("../fileSystem/imageHandler.js");
 const videoHandler = require("../fileSystem/videoHandler.js");
 const formidable = require("formidable");	//do I need formiddable here?#
 const encoder = require('htmlEncode');
-const ContentModel = require('../models/contentModel.js').ContentModel;
 
 
 
@@ -52,7 +51,7 @@ function updatePage(req, res) {
 
 	if (!id) {
 		console.log(`No id provided`);
-		res.status(400).json({message: "Bad request, no page ID provided.", error: `Bad request, 
+		return res.status(400).json({message: "Bad request, no page ID provided.", error: `Bad request, 
 			no page ID provided. ID = ${id}`});
 	}
 
@@ -63,10 +62,18 @@ function updatePage(req, res) {
 
 		if(err) {
 			console.log(`Error parsing update page form: ${err}`);
-			res.status(500).json({message: "Bad request, unable to parse update page form.", error: err});
+			return res.status(400).json({message: "Bad request, unable to parse update page form.", error: err});
 		}
 
-		let contents = fields.content ? JSON.parse(fields.content) : undefined;
+		let contents = undefined;
+
+		if(fields.content) {
+			try {
+				contents = JSON.parse(fields.content);
+			} catch(err) {
+				return res.status(400).json({message: "Bad request, unable to parse content JSON.", error: err});
+			}
+		}
 
 		Promise.all([
 			_updatePageDetails(id, fields.pageName, files['mainImage'], fields.visible),
@@ -80,7 +87,7 @@ function updatePage(req, res) {
 		})
 		.catch( err => {
 			console.log(err);
-			res.status(500).json({message: "Internal server error updating page details", error: err});
+			return res.status(500).json({message: "Internal server error updating page details", error: err});
 		})
 
 	});
@@ -101,7 +108,8 @@ function _updatePageContent(pageId, contents = [], files = {}) {
 
 	var promises = [];
 
-	contents.forEach( content => {
+	for (var i = 0; i < contents.length; i++) {
+		let content = contents[i];
 
 		content.pageId = pageId;
 		if ((content.type === IMAGE || content.type === VIDEO) && files[content.id] ) {
@@ -115,9 +123,9 @@ function _updatePageContent(pageId, contents = [], files = {}) {
 		} else if(content.action === DELETE) {
 			promises.push(_deleteContent(content))
 		} else {
-			throw `Unrecognised action: ${content.action}`;
-		}		
-	})
+			return Promise.reject(`Unrecognised action: ${content.action}`);
+		}	
+	}
 
 	return Promise.all(promises);
 }
