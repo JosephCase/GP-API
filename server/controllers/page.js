@@ -5,6 +5,9 @@ const contentData = require("../database/content.js");
 const imageHandler = require("../fileSystem/imageHandler.js");
 const videoHandler = require("../fileSystem/videoHandler.js");
 const formidable = require("formidable");	//do I need formiddable here?#
+const encoder = require('htmlEncode');
+const ContentModel = require('../models/contentModel.js').ContentModel;
+
 
 
 // content types
@@ -63,14 +66,17 @@ function updatePage(req, res) {
 			res.status(500).json({message: "Bad request, unable to parse update page form.", error: err});
 		}
 
-		let contents = JSON.parse(fields.content);
+		let contents = fields.content ? JSON.parse(fields.content) : undefined;
 
 		Promise.all([
 			_updatePageDetails(id, fields.pageName, files['mainImage'], fields.visible),
-			_updatePageContent(contents, files)
+			_updatePageContent(id, contents, files)
 		])
 		.then( results => {	
-			res.end();
+			res.json({
+				sucess: true,
+				message: 'Updated page details success'
+			});
 		})
 		.catch( err => {
 			console.log(err);
@@ -91,16 +97,15 @@ function _updatePageDetails(id, name, mainImage, visible) {
 
 }
 
-function _updatePageContent(contents, files) {
+function _updatePageContent(pageId, contents = [], files = {}) {
 
 	var promises = [];
 
-	for(var propertyName in contents) {
+	contents.forEach( content => {
 
-		let content = contents[propertyName];
-
-		if ((content.type === IMAGE || content.type === VIDEO) && files[propertyName] ) {
-			content.file = files[propertyName];
+		content.pageId = pageId;
+		if ((content.type === IMAGE || content.type === VIDEO) && files[content.id] ) {
+			content.file = files[content.id];
 		}		
 
 		if(content.action === CREATE) {
@@ -111,22 +116,21 @@ function _updatePageContent(contents, files) {
 			promises.push(_deleteContent(content))
 		} else {
 			throw `Unrecognised action: ${content.action}`;
-		}
+		}		
+	})
 
-	}
-
-	return Promise.All(promises);
+	return Promise.all(promises);
 }
 
-function _addContent(content, file) {
+function _addContent(content) {
 
 	if(content.type === TEXT) {
 		content.data = encoder.htmlEncode(content.data);	//encode the text
 		return contentData.addContent(content)
 	} else if(content.type === IMAGE) {
-		return contentData.addFile(content).then( filePath => {return imageHandler.saveImage(filePath, file)})
+		return contentData.addFile(content).then( filePath => {return imageHandler.saveImage(content.file, filePath)})
 	} else if(content.type === VIDEO) {
-		return contentData.addFile(content).then( filePath => {return videoHandler.saveVideo(filePath, file)})
+		return contentData.addFile(content).then( filePath => {return videoHandler.saveVideo(content.file, filePath)})
 	} else {
 		throw `Invalid content type: ${content.type}`;
 	}
@@ -136,11 +140,15 @@ function _editContent(content) {
 
 	if(content.type === TEXT) {
 		content.data = encoder.htmlEncode(content.data);
-		return contentData.editContent(content);
+		return contentData.updateContent(content);
 	} else if(content.type === IMAGE) {
-		return contentData.editFile(content).then(filePath => {return imageHandler.saveImage(filePath, content.file)})
+		return contentData.updateFile(content).then( filePath => {
+			return content.file ? imageHandler.saveImage(content.file, filePath) : Promise.resolve();
+		})
 	} else if(content.type === VIDEO) {
-		return contentData.editFile(content).then(filePath => {return videoHandler.saveVideo(filePath, content.file)})
+		return contentData.updateFile(content).then( filePath => {
+			return content.file ? videoHandler.saveVideo(content.file, filePath) : Promise.resolve();
+		})
 	} else {
 		throw `Invalid content type: ${content.type}`
 	}
@@ -151,9 +159,9 @@ function _deleteContent(content) {
 	if(content.type === TEXT) {
 		return contentData.deleteContent(content.id);
 	} else if(content.type === IMAGE) {
-		return contentData.deleteFile(content.id).then( filePath => {return imageHandler.deleteImage(filePath, file)})
+		return contentData.deleteFile(content.id).then( filePath => {return imageHandler.deleteImage(filePath)})
 	} else if(content.type === VIDEO) {
-		return contentData.deleteFile(content.id).then( filePath => {return videoHandler.deleteVideo(filePath, file)})
+		return contentData.deleteFile(content.id).then( filePath => {return videoHandler.deleteVideo(filePath)})
 	} else {
 		throw `Invalid content type: ${content.type}`;
 	}

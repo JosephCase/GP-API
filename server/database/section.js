@@ -10,7 +10,8 @@ function getSection(id) {
 				page.id,
 				page.name
 				FROM page
-					where id=${id}`, 
+					where id=?`,
+			id, 
 			function (err, results) {
 				if(err) {
 					return reject(`SQL Error re-ordering sections, ${err}`);
@@ -32,7 +33,8 @@ function getSectionPages(id) {
 				page.position,
 				page.mainImage_url
 				FROM page
-					where parentPage_id=${id}`, 
+					where parentPage_id=?`,
+			id,
 			function (err, results) {
 				if(err) {
 					return reject(`SQL Error re-ordering sections, ${err}`);
@@ -46,9 +48,10 @@ function getSectionPages(id) {
 function addPage(sectionId, pageName) {
 	return new Promise((resolve, reject) => {
 		connection.query(
-			`INSERT INTO page (name, parentPage_id, visible) VALUES(${pageName},${sectionId},0);
+			`INSERT INTO page (name, parentPage_id, visible) VALUES(?,?,0);
 			UPDATE page set mainImage_url = CONCAT('mainImage_', LAST_INSERT_ID(), '.jpg') where id = LAST_INSERT_ID();
 			select id, name, visible, mainImage_url	FROM page WHERE id = LAST_INSERT_ID();`,
+			[pageName,sectionId],
 			function(err, results) {
 				if(err) {			
 					return reject(`SQL Error adding page, ${err}`);	//response report error	T#D
@@ -61,16 +64,18 @@ function addPage(sectionId, pageName) {
 
 function reOrderPages(pages) {
 
-	var query = '';
+	let query = '';
+	let params = [];
 
 	pages.forEach( page => {
-		query += `UPDATE page SET position=${page.position} 
-					WHERE id=${page.id};`
+		query += 'UPDATE page SET position=? WHERE id=?;'
+		params.push(page.position, page.id)
 	});
 
 	return new Promise((resolve, reject) => {		
 		connection.query(
-			query, function (err, results) {
+			query, params,
+			function (err, results) {
 				if(err) {
 					return reject(`SQL Error re-ordering sections, ${err}`);
 				}

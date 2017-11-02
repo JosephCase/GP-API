@@ -23,7 +23,7 @@ function saveImage(image, path) {
 
 	}
 	
-	return Promise.all(promises)
+	return Promise.all(promises);
 
 }
 
@@ -53,6 +53,8 @@ function _resizeAndSaveImage(tempPath, targetPath, targetWidth) {
 }
 
 function deleteImage(path) {
+
+	console.log(path);
 
 	let promises = [];
 

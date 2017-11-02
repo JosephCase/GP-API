@@ -8,7 +8,8 @@ exports.getUser = (username) => {
 
 		connection.query( 
 			`select username, password FROM user
-				WHERE username = '${username}';`,
+				WHERE username = ?;`,
+				username,
 			function(err, results) {
 				if(err) {
 					return reject(`SQL error getting user, ${err}`);

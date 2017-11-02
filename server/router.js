@@ -43,5 +43,10 @@ router.post("/sections/:id/pages", (req, res) => { sectionController.addPage(req
 router.patch("/sections/:id/pages", (req, res) => { sectionController.reOrderPages(req, res) });
 router.patch("/pages/:id", (req, res) => { pageController.updatePage(req, res) });
 
+// catch 404
+router.use(function (err, req, res, next) {
+	console.log(`Error handler middleware: ${err}`);
+})
+
 module.exports = router;
 
