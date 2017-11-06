@@ -2,11 +2,9 @@
 
 To do
 
-- Change config to .js file
-- Change templates to views
-- Add data layer and controller directories and seperate homepage and page script into controller and data
-- Add models?
-- Add JSON web token authentification
+- Use error object to normalise error handling
+- Don't create/delete/updated file records in the DB unless the corresponsing file has been successfully created/updated/deleted.
+- Improve response for creating/editing videos
 
 
 ## Demo Commands
