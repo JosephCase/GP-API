@@ -133,21 +133,21 @@ function _updatePageContent(pageId, contents = [], files = {}) {
 function _addContent(content) {
 
 	if(content.type === TEXT) {
-		content.data = encoder.htmlEncode(content.data);	//encode the text
+		if (content.data) {content.data = encoder.htmlEncode(content.data)};
 		return contentData.addContent(content)
 	} else if(content.type === IMAGE) {
 		return contentData.addFile(content).then( filePath => {return imageHandler.saveImage(content.file, filePath)})
 	} else if(content.type === VIDEO) {
 		return contentData.addFile(content).then( filePath => {return videoHandler.saveVideo(content.file, filePath)})
 	} else {
-		throw `Invalid content type: ${content.type}`;
+		return Promise.reject(`Invalid content type: ${content.type}`);
 	}
 }
 
 function _editContent(content) {
 
 	if(content.type === TEXT) {
-		content.data = encoder.htmlEncode(content.data);
+		if (content.data) {content.data = encoder.htmlEncode(content.data)};
 		return contentData.updateContent(content);
 	} else if(content.type === IMAGE) {
 		return contentData.updateFile(content).then( filePath => {
@@ -158,7 +158,7 @@ function _editContent(content) {
 			return content.file ? videoHandler.saveVideo(content.file, filePath) : Promise.resolve();
 		})
 	} else {
-		throw `Invalid content type: ${content.type}`
+		return Promise.reject(`Invalid content type: ${content.type}`);
 	}
 }
 

@@ -54,8 +54,6 @@ function _resizeAndSaveImage(tempPath, targetPath, targetWidth) {
 
 function deleteImage(path) {
 
-	console.log(path);
-
 	let promises = [];
 
 	for (var i = imageSizes.length - 1; i >= 0; i--) {
@@ -63,20 +61,17 @@ function deleteImage(path) {
 		let width = imageSizes[i];
 		let sizePath = contentDirectory + path.replace('.jpg', '_x' + width + '.jpg');
 
-		promises.push(function(callback){
-			
-			return new Promise((resolve, reject) => {	
+		promises.push(new Promise((resolve, reject) => {	
 
 				fs.unlink(sizePath, function(err) {
 					if(err) return reject(`Error deleting image - path: ${sizePath}, err: ${err}`);
 					return resolve();
 				});
 			})
-		})
-	
+		)	
 	}
 
-	return promises;
+	return Promise.all(promises);
 }
 
 exports.saveImage = saveImage;

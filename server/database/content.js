@@ -67,8 +67,6 @@ exports.addFile = function(content) {
 
 exports.updateContent = function(content) {
 
-	console.log(`Content data: ${content.data}`);
-
 	return new Promise((resolve, reject) => {
 
 		connection.query( 
@@ -122,8 +120,7 @@ exports.deleteContent = function(id) {
 			id,
 			function(err, results) {
 				if(err) return reject(`SQL error deleting content, ${err}`);
-				let path = results[0][0].content;
-				return resolve(path);
+				return resolve();
 			}
 		);
 	});

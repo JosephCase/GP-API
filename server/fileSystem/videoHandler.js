@@ -7,12 +7,13 @@ const config = require('../../config/config.js'),
 const contentDirectory = global.appRoute + '/' + config.contentDirectory;
 const videoFormats = config.videoFormats;
 
-var convertList = {}; //list of videos being converted atm
+
+var processingVideos = {}; //list of videos being converted atm
 
 function saveVideo(video, path) {
 
 	//we keep a record of the videos converting, as we will not wait for them to finish before sending a response
-	processingVideos[path] = ffmpeg(path);
+	processingVideos[path] = ffmpeg(video.path);
 
 	return new Promise((resolve, reject) => {
 
@@ -34,7 +35,7 @@ function saveVideo(video, path) {
 
 		// create the outputs
 		for (var i = 0; i < videoFormats.length; i++) {
-			processingVideos[path].output(path + '.' + videoFormats[i].ext)
+			processingVideos[path].output(contentDirectory + path + '.' + videoFormats[i].ext)
 				.videoCodec(videoFormats[i].codec)	
 				.videoBitrate(1500)
 				.fps(25)
@@ -55,10 +56,9 @@ function deleteVideo(path) {
 
 	for (var i = videoFormats.length - 1; i >= 0; i--) {
 
-		let formatPath = path + '.' + videoFormats[i].ext;
+		let formatPath = contentDirectory + path + '.' + videoFormats[i].ext;
 
-		promises.push(function(){
-			return new Promise((resolve, reject) => {
+		promises.push(new Promise((resolve, reject) => {
 
 				fs.unlink(formatPath, function(err) {
 					if(err) {
@@ -67,16 +67,16 @@ function deleteVideo(path) {
 					return resolve();
 				});				
 			})
-		})
+		)
 	}
 
 	//if the video is still being converted we need to stop it
-	if(convertList[path]) {
-		convertList[path].on('error', function() {
-			delete convertList[path];
+	if(processingVideos[path]) {
+		processingVideos[path].on('error', function() {
+			delete processingVideos[path];
 			return Promise.all(promises);
 		});
-		convertList[path].kill();
+		processingVideos[path].kill();
 	} else {
 		return Promise.all(promises);		
 	}

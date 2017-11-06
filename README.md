@@ -22,9 +22,12 @@ To do
 	{"action":"create","type":"video","id":"new_1","position":2,"size":1,"language":"eng"}
 
 	//edit
-	{"id":163,"type":"text","data":"Old text here","action":"edit","position":0,"language":"ita"}
-	{"id":266,"type":"img","action":"edit","language":"ita","size":2}
+	{"id":500,"action":"update","type":"text","data":"Test for ID #500","size":10,"language":"all","position":100},
+	{"id":518,"action":"update","type":"image","size":3,"language":"all","position":118},
+	{"id":525,"action":"update","type":"video","size":1,"language":"eng","position":1000}
 
 	//delete
-	{"id":268,"type":"img","action":"delete"}
+	{"id":507,"type":"text","action":"delete"},
+	{"id":529,"type":"image","action":"delete"},
+	{"id":529,"type":"video","action":"delete"}
 ]
