@@ -7,7 +7,7 @@ function getPage(id) {
 	return new Promise((resolve, reject) => {
 
 		connection.query(
-			`SELECT name, mainImage_url, id, visible FROM page where id = ?`,
+			`SELECT name, mainImage_url, id, visible, parentPage_id FROM page where id = ?`,
 			id,
 			function (err, results) {
 				if(err) {
@@ -23,8 +23,6 @@ function getPage(id) {
 }
 
 function updatePage(id, name, visible) {
-
-	console.log(typeof visible);
 
 	let setStatement = {};
 	if(name) setStatement.name = name;
