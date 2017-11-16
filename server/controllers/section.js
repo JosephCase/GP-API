@@ -34,6 +34,22 @@ function getSection(req, res) {
 
 }
 
+function getSectionPages(req, res) {
+	let sectionId = req.params.id;
+
+	db.getSectionPages(sectionId)
+	.then( pages => {
+		pages = pageHelper.populatePageUrls(pages);
+		// if(filterVisible) pages = pageHelper.filterVisible(pages);
+		res.json(pages);
+	})
+	.catch( err => {
+		console.log(err);
+		res.status(500).json({message: "Internal server error retrieving section pages.", error: err})	//#todo
+	})
+
+}
+
 
 
 function addPage(req, res) {
@@ -93,5 +109,6 @@ function reOrderPages(req, res) {
 }
 
 exports.getSection = getSection;
+exports.getSectionPages = getSectionPages;
 exports.addPage = addPage;
 exports.reOrderPages = reOrderPages;

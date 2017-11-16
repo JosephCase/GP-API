@@ -28,6 +28,7 @@ router.get('/favicon.ico', function(req, res) {
 // non-protected routes
 router.get("/navigation", (req, res) => { navigationController.getNavLinks(req, res) });
 router.get("/sections/:id", (req, res) => { sectionController.getSection(req, res) });
+router.get("/sections/:id/pages", (req, res) => { sectionController.getSectionPages(req, res) });
 router.get("/pages/:id", (req, res) => { pageController.getPage(req, res) });
 
 router.use(bodyParser.json());
