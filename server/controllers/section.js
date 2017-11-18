@@ -22,7 +22,7 @@ function getSection(req, res) {
 		if(embedPages && results.length > 1) {			
 			let pages = pageHelper.populatePageUrls(results[1]);
 			if(filterVisible) pages = pageHelper.filterVisible(pages);
-			section.pages = pages;
+			section.pages = pageHelper.order(pages);
 		}
 
 		res.json(section);
@@ -40,6 +40,7 @@ function getSectionPages(req, res) {
 	db.getSectionPages(sectionId)
 	.then( pages => {
 		pages = pageHelper.populatePageUrls(pages);
+		pages = pageHelper.order(pages);
 		// if(filterVisible) pages = pageHelper.filterVisible(pages);
 		res.json(pages);
 	})

@@ -14,3 +14,11 @@ exports.filterVisible = (pages) => {
 	});
 	return filteredPages;
 }
+
+exports.order = (pages) => {
+	pages.sort((a, b) => {
+		return a.position - b.position;
+	});
+
+	return pages;
+}

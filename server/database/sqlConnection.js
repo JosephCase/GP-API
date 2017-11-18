@@ -1,31 +1,30 @@
 'use strict';
 
-var mysql = require("mysql"),
+const mysql = require("mysql"),
     config = require("../../config/config.js");
 
+var pool = mysql.createPool(config.databaseLogin);
 
-function createConnection() {
+var connection = {};
 
-    var connection = mysql.createConnection(config.databaseLogin);
+connection.query = function(sql, variables, callback) {
 
-    connection.connect(function(err) { // The server is either down
-        if (err) { // or restarting (takes a while sometimes).
-            console.log('error when connecting to db:', err);
-            setTimeout(createConnection, 2000); // We introduce a delay before attempting to reconnect,
-        } // to avoid a hot loop, and to allow our node script to
-    });
+    if (typeof variables === 'function') {
+        callback = variables;
+        variables = [];
+    }
 
-    connection.on('error', function(err) {
-        if (err.code === 'PROTOCOL_CONNECTION_LOST' || err.code === 'ECONNRESET') { // Connection to the MySQL server is usually
-            createConnection(); // lost due to either server restart, or a
-        } else {
-            console.log('db error', err); // connnection idle timeout (the wait_timeout
-            throw err; // server variable configures this)
+    pool.getConnection(function(err, connection) {
+        if (err) {
+            console.log('db error', err);
+            callback(err, null);
+            return;
         }
+        connection.query(sql, variables, function(err, results) {
+            connection.release();
+            callback(err, results);
+        });
     });
-
-    exports.connection = connection;
-
 }
 
-createConnection();
+exports.connection = connection;
