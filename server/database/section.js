@@ -48,15 +48,16 @@ function getSectionPages(id) {
 function addPage(sectionId, pageName) {
 	return new Promise((resolve, reject) => {
 		connection.query(
-			`INSERT INTO page (name, parentPage_id, visible) VALUES(?,?,0);
+			`INSERT INTO page (name, parentPage_id, visible, position) VALUES(?,?,0,0);
 			UPDATE page set mainImage_url = CONCAT('mainImage_', LAST_INSERT_ID(), '.jpg') where id = LAST_INSERT_ID();
+			UPDATE page set position = position + 1 WHERE parentPage_id = ? AND id != LAST_INSERT_ID();
 			select id, name, visible, mainImage_url	FROM page WHERE id = LAST_INSERT_ID();`,
-			[pageName,sectionId],
+			[pageName,sectionId,sectionId],
 			function(err, results) {
 				if(err) {			
 					return reject(`SQL Error adding page, ${err}`);	//response report error	T#D
 				}
-				return resolve(results[2][0]);
+				return resolve(results[3][0]);
 			}
 		)
 	});
