@@ -104,16 +104,17 @@ function _updatePageDetails(id, name, mainImage, visible) {
 
 }
 
-function _updatePageContent(pageId, contents = [], files = {}) {
+function _updatePageContent(pageId, contents = {}, files = {}) {
 
 	var promises = [];
 
-	for (var i = 0; i < contents.length; i++) {
-		let content = contents[i];
+	for(var contentId in contents) {
 
+		let content = contents[contentId];
 		content.pageId = pageId;
+
 		if ((content.type === IMAGE || content.type === VIDEO) && files[content.id] ) {
-			content.file = files[content.id];
+			content.file = files[contentId];
 		}		
 
 		if(content.action === CREATE) {

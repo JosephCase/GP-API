@@ -52,13 +52,15 @@ function saveVideo(video, path) {
 
 function deleteVideo(path) {
 
-	var promises = [];
+	return _stopSavingVideo(path).then(() => {
 
-	for (var i = videoFormats.length - 1; i >= 0; i--) {
+		var promises = [];
 
-		let formatPath = contentDirectory + path + '.' + videoFormats[i].ext;
+		for (var i = videoFormats.length - 1; i >= 0; i--) {
 
-		promises.push(new Promise((resolve, reject) => {
+			let formatPath = contentDirectory + path + '.' + videoFormats[i].ext;
+
+			promises.push(new Promise((resolve, reject) => {
 
 				fs.unlink(formatPath, function(err) {
 					if(err) {
@@ -66,21 +68,33 @@ function deleteVideo(path) {
 					}
 					return resolve();
 				});				
-			})
-		)
-	}
+			}))
+		}
 
-	//if the video is still being converted we need to stop it
-	if(processingVideos[path]) {
-		processingVideos[path].on('error', function() {
-			delete processingVideos[path];
-			return Promise.all(promises);
-		});
-		processingVideos[path].kill();
-	} else {
-		return Promise.all(promises);		
-	}
+		return Promise.all(promises);
+
+	});
+
 }
+
+function _stopSavingVideo(path) {
+
+	return new Promise((resolve, reject) => {
+		//if the video is still being converted we need to stop it
+		if(processingVideos[path]) {
+			processingVideos[path].on('error', function() {
+				delete processingVideos[path];
+				return resolve();
+			});
+			processingVideos[path].kill();
+		} else {
+			return resolve();		
+		}
+	});
+
+}
+
+
 
 exports.saveVideo = saveVideo;
 exports.deleteVideo = deleteVideo;
