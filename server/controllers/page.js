@@ -1,12 +1,14 @@
 'use strict';
+
+const formidable = require("formidable");
+const encoder = require('htmlEncode');
+
 const config = require("../../config/config.js");
 const pageData = require("../database/page.js");
 const contentData = require("../database/content.js");
 const imageHandler = require("../fileSystem/imageHandler.js");
 const videoHandler = require("../fileSystem/videoHandler.js");
-const formidable = require("formidable");	//do I need formiddable here?#
-const encoder = require('htmlEncode');
-
+const pageHelper = require("../helpers/pageHelper");
 
 
 // content types
@@ -18,6 +20,19 @@ const VIDEO = config.contentTypes.VIDEO ;
 const CREATE = config.actionTypes.CREATE ;
 const UPDATE = config.actionTypes.UPDATE ;
 const DELETE = config.actionTypes.DELETE ;
+
+function getAllPages(req, res) {
+	pageData.getAllPages()
+	.then( result => {
+		let pages = pageHelper.populatePageUrls(result);
+		return res.json(pages);
+	})
+	.catch( err => {
+		console.log(err);
+		res.status(500).json({message: "Internal server error retrieving page details.", error: err});		
+	})
+
+}
 
 function getPage(req, res) {
 
@@ -34,7 +49,15 @@ function getPage(req, res) {
 	Promise.all(promises)
 	.then( results => {
 		let page = results[0];
-		page.content = results[1];
+
+		//htmldecode text
+		let content = results[1];
+		content.forEach(content => {
+			if (content.type === TEXT) {
+				content.content = encoder.htmlDecode(content.content);
+			}
+		})
+		page.content = content;
 
 		res.json(page);
 	})	
@@ -176,6 +199,6 @@ function _deleteContent(content) {
 	}
 }
 
-
+exports.getAllPages = getAllPages;
 exports.getPage = getPage;
 exports.updatePage = updatePage;

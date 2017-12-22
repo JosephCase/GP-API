@@ -2,6 +2,25 @@
 
 var connection = require('./sqlConnection.js').connection;
 
+function getAllPages() {
+	return new Promise((resolve, reject) => {
+
+		connection.query(
+			`SELECT * FROM page`,
+			function (err, results) {
+				if(err) {
+					reject(`SQL error getting page details, ${err}`);
+					return;
+				}
+
+				resolve(results);
+
+			}
+		);
+
+	})
+}
+
 function getPage(id) {
 
 	return new Promise((resolve, reject) => {
@@ -12,6 +31,7 @@ function getPage(id) {
 			function (err, results) {
 				if(err) {
 					reject(`SQL error getting page details, ${err}`);
+					return;
 				}
 
 				resolve(results[0]);
@@ -62,6 +82,7 @@ function getMainImagePath(id) {
 	})
 }
 
+exports.getAllPages = getAllPages;
 exports.getPage = getPage;
 exports.updatePage = updatePage;
 exports.getMainImagePath = getMainImagePath;

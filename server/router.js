@@ -12,7 +12,7 @@ const pageController = require("./controllers/page");
 
 const authMiddleware = require("./middlewares/auth.js");
 
-const router = require('express')();
+const router = express();
 
 //static files
 router.use(function(req, res, next) {
@@ -26,23 +26,24 @@ router.get('/favicon.ico', function(req, res) {
 });
 
 // non-protected routes
-router.get("/navigation", (req, res) => { navigationController.getNavLinks(req, res) });
-router.get("/sections/:id", (req, res) => { sectionController.getSection(req, res) });
-router.get("/sections/:id/pages", (req, res) => { sectionController.getSectionPages(req, res) });
-router.get("/pages/:id", (req, res) => { pageController.getPage(req, res) });
+router.get("/navigation", navigationController.getNavLinks);
+router.get("/pages", pageController.getAllPages);
+router.get("/sections/:id", sectionController.getSection);
+router.get("/sections/:id/pages", sectionController.getSectionPages);
+router.get("/pages/:id", pageController.getPage);
 
 router.use(bodyParser.json());
 
-router.post("/auth", (req, res) => {authController.authenticateWithPassword(req, res)});
+router.post("/auth", authController.authenticateWithPassword);
 
 // protected routes
 router.use(authMiddleware.authenticateJWT);
 
-router.get("/testAuth/:id", (req, res) => { sectionController.getSection(req, res) });
+router.get("/testAuth/:id", sectionController.getSection);
 
-router.post("/sections/:id/pages", (req, res) => { sectionController.addPage(req, res) });
-router.patch("/sections/:id/pages", (req, res) => { sectionController.reOrderPages(req, res) });
-router.patch("/pages/:id", (req, res) => { pageController.updatePage(req, res) });
+router.post("/sections/:id/pages", sectionController.addPage);
+router.patch("/sections/:id/pages", sectionController.reOrderPages);
+router.patch("/pages/:id", pageController.updatePage);
 
 // catch 404
 router.use(function (err, req, res, next) {
