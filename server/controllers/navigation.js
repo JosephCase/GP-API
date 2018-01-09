@@ -1,7 +1,7 @@
 'use strict';
 
 const db = require("../database/navigation.js"),
-	pageHelper = require("../helpers/pageHelper");;
+	pageHelper = require("../helpers/pageHelper");
 
 // get the page content and send it to the client
 function getNavLinks(req, res) {
