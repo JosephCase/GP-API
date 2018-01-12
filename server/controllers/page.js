@@ -1,7 +1,7 @@
 'use strict';
 
 const formidable = require("formidable");
-const encoder = require('htmlEncode');
+const encoder = require('htmlencode');
 
 const config = require("../../config/config.js");
 const pageData = require("../database/page.js");
