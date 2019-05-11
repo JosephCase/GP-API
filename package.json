@@ -6,7 +6,7 @@
     "fluent-ffmpeg": "",
     "formidable": "",
     "htmlencode": "0.0.4",
-    "imagemagick": "",
+    "imagemagick": "0.1.3",
     "jsonwebtoken": "",
     "mysql": "",
     "path": "",

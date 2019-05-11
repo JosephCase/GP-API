@@ -1,74 +1,74 @@
 'use strict';
 
 const config = require('../../config/config.js'),
- 	fs = require("fs"),
+	fs = require("fs"),
 	im = require('imagemagick');
-	
+
 const contentDirectory = global.appRoute + '/' + config.contentDirectory;
-const imageSizes = config.imageSizes;
+const { imageSizes } = config;
 
-function saveImage(image, path) {
+const saveImage = async (image, path) => {
 
-	if(!path || (typeof path) !== 'string') throw `Invalid file, path not equal to string`;
+	if (!path || (typeof path) !== 'string') throw `Invalid file, path not equal to string`;
 
-	// save at multiple sizes
-	let promises = [];
+	const { path: srcImagePath } = image;
+	const srcImageWidth = await getSrcImageWidth(srcImagePath);
 
-	for (var i = imageSizes.length - 1; i >= 0; i--) {
+	for (const width of imageSizes) {
 
-		let width = imageSizes[i];
-		let sizePath = contentDirectory + path.replace('.jpg', '_x' + width + '.jpg');
+		const targetPath = contentDirectory + path.replace('.jpg', '_x' + width + '.jpg');
 
-		promises.push(_resizeAndSaveImage(image.path, sizePath, width));
+		const targetWidth = (width < srcImageWidth) ? width : srcImageWidth;
+
+		await resizeAndSaveImage(srcImagePath, targetPath, targetWidth)
 
 	}
-	
-	return Promise.all(promises);
-
 }
 
-function _resizeAndSaveImage(tempPath, targetPath, targetWidth) {
-
-	return new Promise((resolve, reject) => {		
-
-		im.identify(tempPath, function(err, features){
-			if (err) return reject(`File system - Problem identifying image error: ${err}`);
-			
-			let width = (targetWidth < features.width) ? targetWidth : features.width;	//do not make the image larger
-
-			im.resize({
-				srcPath: tempPath,
-				dstPath: targetPath,
-				width:   width,
-				filter: 'Lanczos'
-			}, function(err, stdout, stderr){
-				if (err) {
-					return reject(`File system - Error resizing image size: ${width}, error: ${err}, stdout: ${stdout}, stderr: ${stderr}`)
-				}
-				return resolve();				
-			});
-
-		});	
+const getSrcImageWidth = srcImagePath => new Promise((resolve, reject) => {
+	im.identify(srcImagePath, (err, imageFeatures) => {
+		if (err) {
+			return reject(`File system - Error identifying image,`, err);
+		}
+		return resolve(imageFeatures.width);
 	})
-}
+})
+
+const resizeAndSaveImage = (srcPath, dstPath, width) => new Promise((resolve, reject) => {
+
+	im.resize({
+		srcPath,
+		dstPath,
+		width,
+		quality: 0.9,
+		filter: 'Lanczos'
+	}, function (err, stdout, stderr) {
+		if (err) {
+			return reject(`File system - Error resizing image size:`, width, `error:`, err, `stdout:`, stdout, `stderr:`, stderr)
+		}
+		return resolve();
+	});
+
+})
+
 
 function deleteImage(path) {
 
 	let promises = [];
 
 	for (var i = imageSizes.length - 1; i >= 0; i--) {
-		
+
 		let width = imageSizes[i];
 		let sizePath = contentDirectory + path.replace('.jpg', '_x' + width + '.jpg');
 
-		promises.push(new Promise((resolve, reject) => {	
+		promises.push(new Promise((resolve, reject) => {
 
-				fs.unlink(sizePath, function(err) {
-					if(err) return reject(`Error deleting image - path: ${sizePath}, err: ${err}`);
-					return resolve();
-				});
-			})
-		)	
+			fs.unlink(sizePath, function (err) {
+				if (err) return reject(`Error deleting image - path: ${sizePath}, err: ${err}`);
+				return resolve();
+			});
+		})
+		)
 	}
 
 	return Promise.all(promises);
