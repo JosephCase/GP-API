@@ -9,20 +9,25 @@ const { imageSizes } = config;
 
 const saveImage = async (image, path) => {
 
-	if (!path || (typeof path) !== 'string') throw `Invalid file, path not equal to string`;
-
 	const { path: srcImagePath } = image;
-	const srcImageWidth = await getSrcImageWidth(srcImagePath);
+	
+	try {
 
-	for (const width of imageSizes) {
+		if (!path || (typeof path) !== 'string') throw `Invalid file, path not equal to string`;
 
-		const targetPath = contentDirectory + path.replace('.jpg', '_x' + width + '.jpg');
+		const srcImageWidth = await getSrcImageWidth(srcImagePath);
 
-		const targetWidth = (width < srcImageWidth) ? width : srcImageWidth;
+		for (const width of imageSizes) {
+			const targetPath = contentDirectory + path.replace('.jpg', '_x' + width + '.jpg');
+			const targetWidth = (width < srcImageWidth) ? width : srcImageWidth;
+			await resizeAndSaveImage(srcImagePath, targetPath, targetWidth)
+		}
 
-		await resizeAndSaveImage(srcImagePath, targetPath, targetWidth)
-
+	} catch (err) {
+		console.log(err);
 	}
+	// cleanup the srcImage
+	await unlinkAsync(srcImagePath);
 }
 
 const getSrcImageWidth = srcImagePath => new Promise((resolve, reject) => {
@@ -51,6 +56,15 @@ const resizeAndSaveImage = (srcPath, dstPath, width) => new Promise((resolve, re
 
 })
 
+const unlinkAsync = path => new Promise(resolve => {
+	fs.unlink(path, err => {
+		if (err) {
+			console.log(`Error deleting image - path: ${path}, err:`, err);
+		}
+		return resolve();
+	});
+})
+
 
 function deleteImage(path) {
 
@@ -61,14 +75,7 @@ function deleteImage(path) {
 		let width = imageSizes[i];
 		let sizePath = contentDirectory + path.replace('.jpg', '_x' + width + '.jpg');
 
-		promises.push(new Promise((resolve, reject) => {
-
-			fs.unlink(sizePath, function (err) {
-				if (err) return reject(`Error deleting image - path: ${sizePath}, err: ${err}`);
-				return resolve();
-			});
-		})
-		)
+		promises.push(unlinkAsync(sizePath))
 	}
 
 	return Promise.all(promises);
